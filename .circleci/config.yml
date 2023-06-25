@@ -66,4 +66,6 @@ workflows:
   wasmcc:
     jobs:
       - x64-test
-      - arm64-test
+        # Not supported with docker yet:
+        # https://circleci.canny.io/cloud-feature-requests/p/support-arm-resource-class-on-docker-executor
+        # - arm64-test
