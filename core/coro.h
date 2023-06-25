@@ -95,16 +95,12 @@ public:
     future(future&) = delete;
     future& operator=(future&) = delete;
     future(future&& moved) noexcept
-      : handle(moved.handle) {
-        moved.handle = nullptr;
-    }
+      : handle(std::exchange(moved.handle, nullptr)) {}
     future& operator=(future&& moved) noexcept {
         handle = std::exchange(moved.handle, nullptr);
     }
     explicit operator std::coroutine_handle<>() {
-        auto tmp = handle;
-        handle = nullptr;
-        return tmp;
+        return std::exchange(handle, nullptr);
     }
     ~future() noexcept {
         if (handle) {
