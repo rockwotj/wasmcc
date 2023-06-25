@@ -1,0 +1,35 @@
+version: 2.1
+
+jobs:
+  x64-test:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - run:
+          name: 'Install dep packages'
+          command: |
+            export DEBIAN_FRONTEND=noninteractive
+            sudo apt update
+            sudo apt install --quiet --yes --no-install-recommends \
+                curl
+            curl -SLo /tmp/llvm.sh https://apt.llvm.org/llvm.sh
+            chmod +x /tmp/llvm.sh
+            sudo /tmp/llvm.sh 16
+            ln -s "$(which clang-16)" /usr/local/bin/clang
+            ln -s "$(which clang++-16)" /usr/local/bin/clang++
+      - checkout
+      - run:
+          name: 'Setup bazelisk'
+          command: |
+            curl -SL -o /tmp/bazel \
+              https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-linux-amd64
+            sudo mv /tmp/bazel /usr/local/bin/bazel
+            sudo chmod +x /usr/local/bin/bazel
+      - run:
+          name: "Run tests"
+          command: bazel test --config=dbg //...
+
+workflows:
+  wasmcc:
+    jobs:
+      - x64-test
