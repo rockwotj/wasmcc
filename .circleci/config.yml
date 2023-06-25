@@ -1,9 +1,11 @@
 version: 2.1
 
-jobs:
-  x64-test:
-    docker:
-      - image: fedora:38
+commands:
+  install-deps:
+    parameters:
+      to:
+        default: "world"
+        type: string
     steps:
       - run:
           name: 'Install dep packages'
@@ -17,21 +19,51 @@ jobs:
               pkg-config
             )
             dnf install -y "${fedora_deps[@]}"
-      - checkout
+  install-bazelisk:
+    parameters:
+      arch:
+        default: ""
+        type: string
+    steps:
       - run:
           name: 'Setup bazelisk'
           command: |
             curl -SL -o /tmp/bazel \
-              https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-linux-amd64
+              https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-linux-<<parameters.arch>>
             sudo mv /tmp/bazel /usr/local/bin/bazel
             sudo chmod +x /usr/local/bin/bazel
+  bazel-test:
+    steps:
       - run:
-          name: "Run tests"
+          name: 'Run tests'
           command: |
             clang --version
             bazel test --config=ci //...
+
+jobs:
+  x64-test:
+    resource_class: large
+    docker:
+      - image: fedora:38
+    steps:
+      - install-deps
+      - checkout
+      - install-bazelisk:
+          arch: "amd64"
+      - bazel-test
+  arm64-test:
+    resource_class: arm.large
+    docker:
+      - image: fedora:38
+    steps:
+      - install-deps
+      - checkout
+      - install-bazelisk:
+          arch: "amd64"
+      - bazel-test
 
 workflows:
   wasmcc:
     jobs:
       - x64-test
+      - arm64-test
