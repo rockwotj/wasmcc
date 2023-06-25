@@ -21,6 +21,9 @@ commands:
             dnf install -y "${fedora_deps[@]}"
   install-bazelisk:
     parameters:
+      os:
+        default: ""
+        type: string
       arch:
         default: ""
         type: string
@@ -29,7 +32,7 @@ commands:
           name: 'Setup bazelisk'
           command: |
             curl -SL -o /tmp/bazel \
-              https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-linux-<<parameters.arch>>
+              https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-<<parameters.os>>-<<parameters.arch>>
             sudo mv /tmp/bazel /usr/local/bin/bazel
             sudo chmod +x /usr/local/bin/bazel
   bazel-test:
@@ -42,30 +45,27 @@ commands:
 
 jobs:
   x64-test:
-    resource_class: large
     docker:
       - image: fedora:38
     steps:
       - install-deps
       - checkout
       - install-bazelisk:
+          os: "linux"
           arch: "amd64"
       - bazel-test
   arm64-test:
-    resource_class: arm.medium
-    docker:
-      - image: fedora:38
+    xcode: 14.3.1
+    resource_class: macos.m1.medium.gen1
     steps:
-      - install-deps
       - checkout
       - install-bazelisk:
-          arch: "amd64"
+          os: "darwin"
+          arch: "arm64"
       - bazel-test
 
 workflows:
   wasmcc:
     jobs:
       - x64-test
-        # Not supported with docker yet:
-        # https://circleci.canny.io/cloud-feature-requests/p/support-arm-resource-class-on-docker-executor
-        # - arm64-test
+      - arm64-test
