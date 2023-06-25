@@ -25,6 +25,8 @@ commands:
               curl
               git
               lld
+              clang
+              llvm
               pkg-config
             )
             sudo apt install -y "${ubuntu_deps[@]}"
@@ -70,9 +72,10 @@ jobs:
       image: ubuntu-2204:current
     resource_class: arm.medium
     environment:
-      CC: gcc
-      CXX: g++
+      CC: clang
+      CXX: clang++
     steps:
+      - install-apt-deps
       - checkout
       - install-bazelisk:
           os: "linux"
