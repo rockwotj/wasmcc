@@ -11,5 +11,4 @@ build:dbg --linkopt=-fsanitize-link-c++-runtime --linkopt=--driver-mode=g++
 
 build:opt --compilation_mode=opt
 
-# Run in debug mode to catch sanitizer and use libc+++ as it's installed
-build:ci --config=dbg --cxxopt=-stdlib=libc++
+build:ci --config=dbg
