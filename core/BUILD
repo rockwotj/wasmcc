@@ -4,8 +4,8 @@ package(
 
 cc_library(
     name = "coro",
-    hdrs = ["coro.h"],
     srcs = ["coro.cc"],
+    hdrs = ["coro.h"],
 )
 
 cc_test(
