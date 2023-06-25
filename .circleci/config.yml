@@ -75,7 +75,7 @@ jobs:
     steps:
       - checkout
       - install-bazelisk:
-          os: "darwin"
+          os: "linux"
           arch: "arm64"
       - bazel-test
 
