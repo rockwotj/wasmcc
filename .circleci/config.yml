@@ -27,7 +27,9 @@ jobs:
             sudo chmod +x /usr/local/bin/bazel
       - run:
           name: "Run tests"
-          command: bazel test --config=dbg //...
+          command: |
+            clang --version
+            bazel test --config=dbg //...
 
 workflows:
   wasmcc:
