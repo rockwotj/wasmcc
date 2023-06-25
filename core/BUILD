@@ -5,6 +5,7 @@ package(
 cc_library(
     name = "coro",
     hdrs = ["coro.h"],
+    srcs = ["coro.cc"],
 )
 
 cc_test(

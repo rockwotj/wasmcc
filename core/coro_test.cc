@@ -6,15 +6,15 @@
 
 namespace wasmcc {
 
-future<int> f() { co_return 4; }
+co::future<int> f() { co_return 4; }
 
-future<int> g() {
+co::future<int> g() {
     int a = co_await f();
     int b = co_await f();
     co_return a + b;
 }
 
-future<int> h() {
+co::future<int> h() {
     auto a = co_await f();
     auto b = co_await f();
     auto c = co_await g();
@@ -22,8 +22,10 @@ future<int> h() {
 }
 
 TEST(CoroutineTests, SmokeTest) {
-    wasmcc::future<int> f = wasmcc::h();
+    co::future<int> f = h();
     EXPECT_EQ(f.get(), 0);
 }
+
+TEST(CoroutineTests, MaybeYield) { co::maybe_yield().get(); }
 
 } // namespace wasmcc

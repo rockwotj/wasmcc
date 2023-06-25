@@ -15,8 +15,8 @@ jobs:
             curl -SLo /tmp/llvm.sh https://apt.llvm.org/llvm.sh
             chmod +x /tmp/llvm.sh
             sudo /tmp/llvm.sh 16
-            ln -s "$(which clang-16)" /usr/local/bin/clang
-            ln -s "$(which clang++-16)" /usr/local/bin/clang++
+            sudo ln -s "$(which clang-16)" /usr/local/bin/clang
+            sudo ln -s "$(which clang++-16)" /usr/local/bin/clang++
       - checkout
       - run:
           name: 'Setup bazelisk'

@@ -7,7 +7,7 @@
 
 #pragma once
 
-namespace wasmcc {
+namespace wasmcc::co {
 
 /**
  * When not building within seastar, this is as simple as it gets future
@@ -15,6 +15,11 @@ namespace wasmcc {
  */
 template<typename T = void>
 class future;
+
+/**
+ * Give up the CPU if the scheduler deems it so.
+ */
+future<> maybe_yield();
 
 namespace detail {
 
@@ -114,6 +119,7 @@ private:
 namespace detail {
 template<>
 class chain_promise<void> final {
+public:
     constexpr void return_void() const noexcept {}
     void unhandled_exception() noexcept { _result = std::current_exception(); }
     future<> get_return_object() noexcept { return future<>(this); }
@@ -139,4 +145,4 @@ inline decltype(auto) future<void>::await_resume() {
     }
 }
 
-} // namespace wasmcc
+} // namespace wasmcc::co
