@@ -3,20 +3,8 @@ version: 2.1
 jobs:
   x64-test:
     docker:
-      - image: cimg/base:stable
+      - image: silkeh/clang:16
     steps:
-      - run:
-          name: 'Install dep packages'
-          command: |
-            export DEBIAN_FRONTEND=noninteractive
-            sudo apt update
-            sudo apt install --quiet --yes --no-install-recommends \
-                curl
-            curl -SLo /tmp/llvm.sh https://apt.llvm.org/llvm.sh
-            chmod +x /tmp/llvm.sh
-            sudo /tmp/llvm.sh 16
-            sudo ln -s "$(which clang-16)" /usr/local/bin/clang
-            sudo ln -s "$(which clang++-16)" /usr/local/bin/clang++
       - checkout
       - run:
           name: 'Setup bazelisk'
