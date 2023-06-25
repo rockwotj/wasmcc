@@ -1,5 +1,4 @@
 build --cxxopt=-std=c++20
-build --repo_env=CC=clang --repo_env=CXX=clang++
 
 build:dbg --compilation_mode=dbg
 build:dbg --strip=never --copt=-O1 --copt=-fno-omit-frame-pointer

@@ -15,6 +15,7 @@ cc_library(
         "-DASMJIT_EMBED",
         "-fmerge-all-constants",
         "-Wno-deprecated-anon-enum-enum-conversion",
+        "-Wno-deprecated-enum-enum-conversion",
         "-fno-threadsafe-statics",
         "-fno-semantic-interposition",
     ],

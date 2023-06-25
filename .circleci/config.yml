@@ -1,11 +1,7 @@
 version: 2.1
 
 commands:
-  install-deps:
-    parameters:
-      to:
-        default: "world"
-        type: string
+  install-dnf-deps:
     steps:
       - run:
           name: 'Install dep packages'
@@ -19,6 +15,19 @@ commands:
               pkg-config
             )
             dnf install -y "${fedora_deps[@]}"
+  install-apt-deps:
+    steps:
+      - run:
+          name: 'Install dep packages'
+          command: |
+            ubuntu_deps=(
+              build-essential
+              curl
+              git
+              lld
+              pkg-config
+            )
+            sudo apt install -y "${ubuntu_deps[@]}"
   install-bazelisk:
     parameters:
       os:
@@ -40,24 +49,29 @@ commands:
       - run:
           name: 'Run tests'
           command: |
-            clang --version
             bazel test --config=ci //...
 
 jobs:
   x64-test:
     docker:
       - image: fedora:38
+    environment:
+      CC: clang
+      CXX: clang++
     steps:
-      - install-deps
+      - install-dnf-deps
       - checkout
       - install-bazelisk:
           os: "linux"
           arch: "amd64"
       - bazel-test
   arm64-test:
-    macos:
-      xcode: 14.3.1
-    resource_class: macos.m1.medium.gen1
+    machine:
+      image: ubuntu-2004:current
+    resource_class: arm.medium
+    environment:
+      CC: gcc
+      CXX: g++
     steps:
       - checkout
       - install-bazelisk:
