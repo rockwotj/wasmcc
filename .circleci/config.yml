@@ -52,7 +52,7 @@ jobs:
           arch: "amd64"
       - bazel-test
   arm64-test:
-    resource_class: arm.large
+    resource_class: arm.medium
     docker:
       - image: fedora:38
     steps:
