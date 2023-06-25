@@ -1,0 +1,3 @@
+bazel-*
+compilation_commands.json
+external
