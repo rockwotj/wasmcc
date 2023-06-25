@@ -67,7 +67,7 @@ jobs:
       - bazel-test
   arm64-test:
     machine:
-      image: ubuntu-2004:current
+      image: ubuntu-2204:current
     resource_class: arm.medium
     environment:
       CC: gcc
