@@ -29,6 +29,7 @@ commands:
               llvm
               pkg-config
             )
+            sudo apt update
             sudo apt install -y "${ubuntu_deps[@]}"
   install-bazelisk:
     parameters:
