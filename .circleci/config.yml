@@ -1,52 +1,12 @@
 version: 2.1
 
 commands:
-  install-dnf-deps:
+  setup:
     steps:
       - run:
-          name: 'Install dep packages'
+          name: 'Dev Setup'
           command: |
-            fedora_deps=(
-              clang
-              curl
-              git
-              llvm
-              lld
-              pkg-config
-            )
-            dnf install -y "${fedora_deps[@]}"
-  install-apt-deps:
-    steps:
-      - run:
-          name: 'Install dep packages'
-          command: |
-            ubuntu_deps=(
-              build-essential
-              curl
-              git
-              lld
-              clang
-              llvm
-              pkg-config
-            )
-            sudo apt update
-            sudo apt install -y "${ubuntu_deps[@]}"
-  install-bazelisk:
-    parameters:
-      os:
-        default: ""
-        type: string
-      arch:
-        default: ""
-        type: string
-    steps:
-      - run:
-          name: 'Setup bazelisk'
-          command: |
-            curl -SL -o /tmp/bazel \
-              https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-<<parameters.os>>-<<parameters.arch>>
-            sudo mv /tmp/bazel /usr/local/bin/bazel
-            sudo chmod +x /usr/local/bin/bazel
+            ./dev setup
   bazel-test:
     steps:
       - run:
@@ -58,29 +18,17 @@ jobs:
   x64-test:
     docker:
       - image: fedora:38
-    environment:
-      CC: clang
-      CXX: clang++
     steps:
-      - install-dnf-deps
       - checkout
-      - install-bazelisk:
-          os: "linux"
-          arch: "amd64"
+      - setup
       - bazel-test
   arm64-test:
     machine:
       image: ubuntu-2204:current
     resource_class: arm.medium
-    environment:
-      CC: clang
-      CXX: clang++
     steps:
-      - install-apt-deps
       - checkout
-      - install-bazelisk:
-          os: "linux"
-          arch: "arm64"
+      - setup
       - bazel-test
 
 workflows:

@@ -1,4 +1,4 @@
-#include "core/coro.h"
+#include "base/coro.h"
 
 namespace wasmcc::co {
 future<> maybe_yield() { co_return; }
