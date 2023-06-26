@@ -2,10 +2,12 @@
 
 import readline
 import platform
+from glob import glob
 import argparse
 import shlex
 import subprocess
 import sys
+import os
 import shutil
 
 def install_apt():
@@ -26,6 +28,7 @@ def install_apt():
         "clang",
         "llvm",
         "pkg-config",
+        "clang-format",
     ])
 def install_dnf():
     subprocess.check_call([
@@ -38,9 +41,10 @@ def install_dnf():
         "clang",
         "llvm",
         "pkg-config",
+        "clang-tools-extra",
     ])
 def install_bazelisk():
-    os = platform.system().lower()
+    osys = platform.system().lower()
     arch = platform.machine().lower()
     if arch == 'x86_64':
         arch = 'amd64'
@@ -48,10 +52,11 @@ def install_bazelisk():
         arch = 'arm64'
     subprocess.check_call([
         "curl", "-SL", "-o", "/tmp/bazel",
-        f"https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-{os}-{arch}"
+        f"https://github.com/bazelbuild/bazelisk/releases/download/v1.17.0/bazelisk-{osys}-{arch}"
     ])
     subprocess.check_call(["chmod", "+x", "/tmp/bazel"])
-    shutil.move("/tmp/bazel", "/usr/local/bin/bazel")
+    subprocess.check_call(["sudo", "mkdir", "-p", "/usr/local/bin"])
+    subprocess.check_call(["sudo", "mv", "/tmp/bazel", "/usr/local/bin/bazel"])
 
 def install_deps():
     if platform.system() == "Darwin":
@@ -86,6 +91,16 @@ def install_deps():
 def rlsp():
     subprocess.check_call(["bazel", "run", "//:refresh_lsp"])
 
+def fmt():
+    for file in glob("**/*.cc", recursive=True) + glob("**/*.h", recursive=True):
+        if file.startswith("external/"):
+            continue
+        subprocess.check_call([
+            "clang-format",
+            "-i",
+            file,
+        ])
+
 parser = argparse.ArgumentParser(exit_on_error=False)
 subparsers = parser.add_subparsers()
 
@@ -94,6 +109,9 @@ parser_lsp.set_defaults(func=rlsp)
 
 parser_deps = subparsers.add_parser('setup')
 parser_deps.set_defaults(func=install_deps)
+
+parser_deps = subparsers.add_parser('fmt')
+parser_deps.set_defaults(func=fmt)
 
 def print_help():
     print(parser.format_help())
