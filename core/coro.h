@@ -34,7 +34,7 @@ struct awaiter_node {
 };
 
 template<class T>
-class chain_promise final {
+class promise final {
 public:
     void return_value(T&& value) noexcept {
         _result.template emplace<1>(std::move(value));
@@ -48,7 +48,6 @@ public:
         return {};
     }
     awaiter_node final_suspend() const noexcept { return _chain; }
-    awaiter_node* awaiter() { return &_chain; }
 
     friend class future<T>;
 
@@ -63,9 +62,9 @@ template<typename T>
 class [[nodiscard("must not drop futures")]] future {
 public:
     // coroutine interface
-    using promise_type = detail::chain_promise<T>;
+    using promise_type = detail::promise<T>;
     explicit future(promise_type* p) noexcept
-      : handle(std::coroutine_handle<promise_type>::from_promise(*p)) {}
+      : _handle(std::coroutine_handle<promise_type>::from_promise(*p)) {}
 
     T get() {
         auto handle = await_suspend(std::noop_coroutine());
@@ -79,15 +78,15 @@ public:
     constexpr bool await_ready() const noexcept { return false; }
     std::coroutine_handle<>
     await_suspend(std::coroutine_handle<> parent) const noexcept {
-        handle.promise().awaiter()->parent = parent;
-        return handle;
+        _handle.promise()._chain.parent = parent;
+        return _handle;
     }
     decltype(auto) await_resume() {
-        if (handle.promise()._result.index() == 1) {
-            return std::move(std::get<1>(handle.promise()._result));
+        if (_handle.promise()._result.index() == 1) {
+            return std::move(std::get<1>(_handle.promise()._result));
         } else {
             std::rethrow_exception(
-              std::get<std::exception_ptr>(handle.promise()._result));
+              std::get<std::exception_ptr>(_handle.promise()._result));
         }
     };
 
@@ -95,26 +94,26 @@ public:
     future(future&) = delete;
     future& operator=(future&) = delete;
     future(future&& moved) noexcept
-      : handle(std::exchange(moved.handle, nullptr)) {}
+      : _handle(std::exchange(moved._handle, nullptr)) {}
     future& operator=(future&& moved) noexcept {
-        handle = std::exchange(moved.handle, nullptr);
+        _handle = std::exchange(moved._handle, nullptr);
     }
     explicit operator std::coroutine_handle<>() {
-        return std::exchange(handle, nullptr);
+        return std::exchange(_handle, nullptr);
     }
     ~future() noexcept {
-        if (handle) {
-            handle.destroy();
+        if (_handle) {
+            _handle.destroy();
         }
     }
 
 private:
-    std::coroutine_handle<promise_type> handle;
+    std::coroutine_handle<promise_type> _handle;
 };
 
 namespace detail {
 template<>
-class chain_promise<void> final {
+class promise<void> final {
 public:
     constexpr void return_void() const noexcept {}
     void unhandled_exception() noexcept { _result = std::current_exception(); }
@@ -123,7 +122,6 @@ public:
         return {};
     }
     awaiter_node final_suspend() const noexcept { return _chain; }
-    awaiter_node* awaiter() { return &_chain; }
 
 private:
     friend class future<>;
@@ -135,7 +133,7 @@ private:
 
 template<>
 inline decltype(auto) future<void>::await_resume() {
-    const auto& result = handle.promise()._result;
+    const auto& result = _handle.promise()._result;
     if (result.has_value()) {
         std::rethrow_exception(result.value());
     }
