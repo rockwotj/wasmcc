@@ -8,7 +8,30 @@ import shlex
 import subprocess
 import sys
 import os
-import shutil
+
+
+def update_alternatives(version: int, priority: int, master: str,
+                        slaves: list[str]):
+    """
+    Update clang-16 to be available as `clang`.
+
+    Inspired from: https://gist.github.com/junkdog/70231d6953592cd6f27def59fe19e50d?permalink_comment_id=4336074#gistcomment-4336074
+    """
+    path = "/usr/bin/"
+    cmdln = [
+        "--verbose", "--install", f"{path}{master}", master,
+        f"{path}{master}-{version}", f"{priority}"
+    ]
+    for slave in slaves:
+        cmdln += [
+            "--slave", f"{path}{slave}", slave, f"{path}{slave}-{version}"
+        ]
+    subprocess.check_call([
+        "sudo",
+        "update-alternatives",
+        *cmdln,
+    ])
+
 
 def install_apt():
     subprocess.check_call([
@@ -25,12 +48,70 @@ def install_apt():
         "curl",
         "git",
         "lld",
-        "clang",
-        "llvm",
         "pkg-config",
-        "clang-format",
+        "software-properties-common",
+        "gnupg"
     ])
+    clang_version = 16
+    subprocess.check_call(
+        ["curl", "-SL", "-o", "/tmp/llvm.sh", "https://apt.llvm.org/llvm.sh"])
+    subprocess.check_call(["sudo", "bash", "/tmp/llvm.sh", f"{clang_version}"],
+                          env={
+                              **os.environ, "DEBIAN_FRONTEND": "noninteractive"
+                          }, stdin=subprocess.DEVNULL)
+    update_alternatives(
+        version=clang_version,
+        priority=100,
+        master="llvm-config",
+        slaves=[
+            "llvm-addr2line", "llvm-ar", "llvm-as", "llvm-bcanalyzer",
+            "llvm-bitcode-strip", "llvm-cat", "llvm-cfi-verify", "llvm-cov",
+            "llvm-c-test", "llvm-cvtres", "llvm-cxxdump", "llvm-cxxfilt",
+            "llvm-cxxmap", "llvm-debuginfod", "llvm-debuginfod-find",
+            "llvm-diff", "llvm-dis", "llvm-dlltool", "llvm-dwarfdump",
+            "llvm-dwarfutil", "llvm-dwp", "llvm-exegesis", "llvm-extract",
+            "llvm-gsymutil", "llvm-ifs", "llvm-install-name-tool",
+            "llvm-jitlink", "llvm-jitlink-executor", "llvm-lib",
+            "llvm-libtool-darwin", "llvm-link", "llvm-lipo", "llvm-lto",
+            "llvm-lto2", "llvm-mc", "llvm-mca", "llvm-ml", "llvm-modextract",
+            "llvm-mt", "llvm-nm", "llvm-objcopy", "llvm-objdump",
+            "llvm-omp-device-info", "llvm-opt-report", "llvm-otool",
+            "llvm-pdbutil", "llvm-PerfectShuffle", "llvm-profdata",
+            "llvm-profgen", "llvm-ranlib", "llvm-rc", "llvm-readelf",
+            "llvm-readobj", "llvm-reduce", "llvm-remark-size-diff",
+            "llvm-rtdyld", "llvm-sim", "llvm-size", "llvm-split",
+            "llvm-stress", "llvm-strings", "llvm-strip", "llvm-symbolizer",
+            "llvm-tapi-diff", "llvm-tblgen", "llvm-tli-checker",
+            "llvm-undname", "llvm-windres", "llvm-xray"
+        ])
+    update_alternatives(
+        version=clang_version,
+        priority=100,
+        master="clang",
+        slaves=[
+            "analyze-build", "asan_symbolize", "bugpoint", "c-index-test",
+            "clang++", "clang-apply-replacements", "clang-change-namespace",
+            "clang-check", "clang-cl", "clang-cpp", "clangd", "clang-doc",
+            "clang-extdef-mapping", "clang-format", "clang-format-diff",
+            "clang-include-fixer", "clang-linker-wrapper", "clang-move",
+            "clang-nvlink-wrapper", "clang-offload-bundler",
+            "clang-offload-packager", "clang-offload-wrapper", "clang-pseudo",
+            "clang-query", "clang-refactor", "clang-rename",
+            "clang-reorder-fields", "clang-repl", "clang-scan-deps",
+            "clang-tidy", "count", "diagtool", "dsymutil", "FileCheck",
+            "find-all-symbols", "git-clang-format", "hmaptool",
+            "hwasan_symbolize", "intercept-build", "ld64.lld", "ld.lld", "llc",
+            "lld", "lldb", "lldb-argdumper", "lldb-instr", "lldb-server",
+            "lldb-vscode", "lld-link", "lli", "lli-child-target", "modularize",
+            "not", "obj2yaml", "opt", "pp-trace", "run-clang-tidy", "sancov",
+            "sanstats", "scan-build", "scan-build-py", "scan-view",
+            "split-file", "UnicodeNameMappingGenerator", "verify-uselistorder",
+            "wasm-ld", "yaml2obj", "yaml-bench"
+        ])
+
+
 def install_dnf():
+    # Thankfully fedora has very recent versions of clang + LLVM
     subprocess.check_call([
         "dnf",
         "install",
@@ -43,6 +124,8 @@ def install_dnf():
         "pkg-config",
         "clang-tools-extra",
     ])
+
+
 def install_bazelisk():
     osys = platform.system().lower()
     arch = platform.machine().lower()
@@ -58,7 +141,8 @@ def install_bazelisk():
     subprocess.check_call(["sudo", "mkdir", "-p", "/usr/local/bin"])
     subprocess.check_call(["sudo", "mv", "/tmp/bazel", "/usr/local/bin/bazel"])
 
-def install_deps():
+
+def install_ci_deps():
     if platform.system() == "Darwin":
         install_bazelisk()
         return
@@ -86,13 +170,14 @@ def install_deps():
         return 1
 
 
-
 # Refresh lsp command
 def rlsp():
     subprocess.check_call(["bazel", "run", "//:refresh_lsp"])
 
+
 def fmt():
-    for file in glob("**/*.cc", recursive=True) + glob("**/*.h", recursive=True):
+    for file in glob("**/*.cc", recursive=True) + glob("**/*.h",
+                                                       recursive=True):
         if file.startswith("external/"):
             continue
         subprocess.check_call([
@@ -101,17 +186,19 @@ def fmt():
             file,
         ])
 
+
 parser = argparse.ArgumentParser(exit_on_error=False)
 subparsers = parser.add_subparsers()
 
 parser_lsp = subparsers.add_parser('rlsp')
 parser_lsp.set_defaults(func=rlsp)
 
-parser_deps = subparsers.add_parser('setup')
-parser_deps.set_defaults(func=install_deps)
+parser_deps = subparsers.add_parser('ci-setup')
+parser_deps.set_defaults(func=install_ci_deps)
 
 parser_deps = subparsers.add_parser('fmt')
 parser_deps.set_defaults(func=fmt)
+
 
 def print_help():
     print(parser.format_help())
@@ -129,6 +216,7 @@ def evaluate(line):
         print("unknown command")
         print_help()
 
+
 if __name__ == '__main__':
     # Dispatch the function or loop
     args = parser.parse_args()
@@ -142,4 +230,3 @@ if __name__ == '__main__':
                 evaluate(line)
             except EOFError:
                 break
-    

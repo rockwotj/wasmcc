@@ -4,9 +4,9 @@ commands:
   setup:
     steps:
       - run:
-          name: 'Dev Setup'
+          name: 'CI Setup'
           command: |
-            ./dev setup
+            ./dev ci-setup
   bazel-test:
     steps:
       - run:
