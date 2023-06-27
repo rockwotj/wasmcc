@@ -7,12 +7,6 @@ commands:
           name: 'CI Setup'
           command: |
             ./dev ci-setup
-  bazel-test:
-    steps:
-      - run:
-          name: 'Run tests'
-          command: |
-            bazel test --config=ci //...
 
 jobs:
   x64-test:
@@ -21,7 +15,10 @@ jobs:
     steps:
       - checkout
       - setup
-      - bazel-test
+      - run:
+          name: 'Run tests'
+          command: |
+            bazel test --config=dbg //...
   arm64-test:
     machine:
       image: ubuntu-2204:current
@@ -29,7 +26,12 @@ jobs:
     steps:
       - checkout
       - setup
-      - bazel-test
+      - run:
+          name: 'Run tests'
+          command: |
+            # We don't run with ubsan mode because of clang linking bugs:
+            # See: https://github.com/envoyproxy/envoy/issues/13973
+            bazel test --config=asan //...
 
 workflows:
   wasmcc:
