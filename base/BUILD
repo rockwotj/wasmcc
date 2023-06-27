@@ -3,6 +3,16 @@ package(
 )
 
 cc_library(
+    name = "named_type",
+    hdrs = ["named_type.h"],
+)
+
+cc_library(
+    name = "type_traits",
+    hdrs = ["type_traits.h"],
+)
+
+cc_library(
     name = "coro",
     srcs = ["coro.cc"],
     hdrs = ["coro.h"],

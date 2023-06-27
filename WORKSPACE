@@ -29,3 +29,16 @@ http_archive(
     strip_prefix = "asmjit-3577608cab0bc509f856ebf6e41b2f9d9f71acc4",
     urls = ["https://github.com/asmjit/asmjit/archive/3577608cab0bc509f856ebf6e41b2f9d9f71acc4.zip"],
 )
+
+http_archive(
+  name = "com_google_absl",
+  urls = ["https://github.com/abseil/abseil-cpp/archive/e6c09ae4b2acd421a29706f86e66eaa422262ad0.zip"],
+  strip_prefix = "abseil-cpp-e6c09ae4b2acd421a29706f86e66eaa422262ad0",
+  sha256 = "bd92719155e8ff9854efd9547425920ffa83beaae5de1d0627e9caebc555d415",
+)
+
+http_archive(
+  name = "bazel_skylib",
+  urls = ["https://github.com/bazelbuild/bazel-skylib/releases/download/1.2.1/bazel-skylib-1.2.1.tar.gz"],
+  sha256 = "f7be3474d42aae265405a592bb7da8e171919d74c16f082a5457840f06054728",
+)

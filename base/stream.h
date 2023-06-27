@@ -36,8 +36,12 @@ class Stream {
    */
   virtual size_t ReadBytes(bytes_view) = 0;
 
+  virtual size_t Skip(size_t) = 0;
+
   /** If there is data left on the stream. */
   virtual bool HasRemaining() = 0;
+  /** The number of bytes that have been consumed on the stream. */
+  virtual size_t BytesConsumed() = 0;
 };
 
 /**
@@ -54,7 +58,9 @@ class ByteStream : public Stream {
 
   uint8_t ReadByte() override;
   size_t ReadBytes(bytes_view) override;
+  size_t Skip(size_t) override;
   bool HasRemaining() override;
+  size_t BytesConsumed() override;
 
  private:
   bytes _buffer;

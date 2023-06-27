@@ -19,6 +19,12 @@ size_t ByteStream::ReadBytes(bytes_view out) {
   _position += amt;
   return amt;
 }
+size_t ByteStream::Skip(size_t n) {
+  size_t amt = std::min(n, _buffer.size() - _position);
+  _position += amt;
+  return amt;
+}
 bool ByteStream::HasRemaining() { return _position < _buffer.size(); }
+size_t ByteStream::BytesConsumed() { return _position; }
 
 }  // namespace wasmcc

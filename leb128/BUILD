@@ -5,6 +5,7 @@ cc_library(
     "//base:stream",
     "//base:bytes",
   ],
+  visibility = ["//visibility:public"],
 )
 
 cc_test(

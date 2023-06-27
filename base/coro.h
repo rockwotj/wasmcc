@@ -19,7 +19,7 @@ class future;
 /**
  * Give up the CPU if the scheduler deems it so.
  */
-future<> maybe_yield();
+future<> MaybeYield();
 
 namespace detail {
 

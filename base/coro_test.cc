@@ -44,7 +44,7 @@ TEST(CoroutineTests, SmokeTest) {
   EXPECT_EQ(f.get(), 0);
 }
 
-TEST(CoroutineTests, MaybeYield) { co::maybe_yield().get(); }
+TEST(CoroutineTests, MaybeYield) { co::MaybeYield().get(); }
 
 TEST(CoroutineTests, MoveOnly) {
   co::future<MoveOnly> f = n();
