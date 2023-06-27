@@ -22,6 +22,6 @@ class ModuleTooLargeException : public ParseException {
       : ParseException(std::move(msg)) {}
 };
 
-co::future<ParsedModule> parse_module(Stream*);
+co::Future<ParsedModule> ParseModule(Stream*);
 
 }  // namespace wasmcc

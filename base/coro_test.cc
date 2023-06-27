@@ -17,22 +17,22 @@ struct MoveOnly {
   int foo;
 };
 
-co::future<MoveOnly> m() { co_return MoveOnly(1); }
-co::future<MoveOnly> n() {
+co::Future<MoveOnly> m() { co_return MoveOnly(1); }
+co::Future<MoveOnly> n() {
   auto a = co_await m();
   auto b = co_await m();
   co_return MoveOnly(a.foo + b.foo);
 }
 
-co::future<int> f() { co_return 4; }
+co::Future<int> f() { co_return 4; }
 
-co::future<int> g() {
+co::Future<int> g() {
   int a = co_await f();
   int b = co_await f();
   co_return a + b;
 }
 
-co::future<int> h() {
+co::Future<int> h() {
   auto a = co_await f();
   auto b = co_await f();
   auto c = co_await g();
@@ -40,14 +40,14 @@ co::future<int> h() {
 }
 
 TEST(CoroutineTests, SmokeTest) {
-  co::future<int> f = h();
+  co::Future<int> f = h();
   EXPECT_EQ(f.get(), 0);
 }
 
 TEST(CoroutineTests, MaybeYield) { co::MaybeYield().get(); }
 
 TEST(CoroutineTests, MoveOnly) {
-  co::future<MoveOnly> f = n();
+  co::Future<MoveOnly> f = n();
   EXPECT_EQ(f.get().foo, 2);
 }
 

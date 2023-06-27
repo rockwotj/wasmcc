@@ -40,7 +40,7 @@ constexpr size_t kMaxGlobals = 1U << 10U;
 constexpr size_t kMaxExports = 1U << 8U;
 constexpr size_t kMaxNameLength = 1U << 8U;
 
-ValType parse_valtype(Stream* parser) {
+ValType ParseValType(Stream* parser) {
   auto type_id = parser->ReadByte();
   switch (type_id) {
     case uint8_t(ValType::kI32):
@@ -56,15 +56,14 @@ ValType parse_valtype(Stream* parser) {
 }
 
 template <typename NamedInteger, typename Vector>
-void validate_in_range(std::string_view msg, NamedInteger idx,
-                       const Vector& v) {
+void ValidateInRange(std::string_view msg, NamedInteger idx, const Vector& v) {
   if (idx.value() < 0 || idx.value() >= v.size()) {
     throw ParseException(absl::StrFormat("%s out of range - %d ∉ [0, %d)", msg,
                                          idx.value(), v.size()));
   }
 }
 
-Name parse_name(Stream* parser) {
+Name ParseName(Stream* parser) {
   auto str_len = leb128::decode<uint32_t>(parser);
   if (str_len > kMaxNameLength) {
     throw ParseException(absl::StrFormat("name too long: %d", str_len));
@@ -79,52 +78,52 @@ Name parse_name(Stream* parser) {
   return Name(std::move(s));
 }
 
-TypeIdx parse_typeidx(Stream* parser) {
+TypeIdx ParseTypeIdx(Stream* parser) {
   return TypeIdx(leb128::decode<uint32_t>(parser));
 }
 
-FuncIdx parse_funcidx(Stream* parser) {
+FuncIdx ParseFuncIdx(Stream* parser) {
   return FuncIdx(leb128::decode<uint32_t>(parser));
 }
-TableIdx parse_tableidx(Stream* parser) {
+TableIdx ParseTableIdx(Stream* parser) {
   return TableIdx(leb128::decode<uint32_t>(parser));
 }
-MemIdx parse_memidx(Stream* parser) {
+MemIdx ParseMemIdx(Stream* parser) {
   return MemIdx(leb128::decode<uint32_t>(parser));
 }
-GlobalIdx parse_globalidx(Stream* parser) {
+GlobalIdx ParseGlobalIdx(Stream* parser) {
   return GlobalIdx(leb128::decode<uint32_t>(parser));
 }
 
-template <size_t max>
-std::vector<ValType> parse_signature_types(Stream* parser) {
+template <size_t kMax>
+std::vector<ValType> ParseSignatureTypes(Stream* parser) {
   auto vector_size = leb128::decode<uint32_t>(parser);
-  if (vector_size > max) {
+  if (vector_size > kMax) {
     throw ModuleTooLargeException(
         absl::StrFormat("too many parameters to function: %d", vector_size));
   }
   std::vector<ValType> result_type;
   result_type.reserve(vector_size);
   for (uint32_t i = 0; i < vector_size; ++i) {
-    result_type.push_back(parse_valtype(parser));
+    result_type.push_back(ParseValType(parser));
   }
   return result_type;
 }
 
-FunctionSignature parse_signature(Stream* parser) {
+FunctionSignature ParseSignature(Stream* parser) {
   auto magic = parser->ReadByte();
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
   if (magic != 0x60) {
     throw ParseException(
         absl::StrFormat("function type magic mismatch: %x", magic));
   }
-  auto parameter_types = parse_signature_types<kMaxFunctionParameters>(parser);
-  auto result_types = parse_signature_types<kMaxFunctionResults>(parser);
+  auto parameter_types = ParseSignatureTypes<kMaxFunctionParameters>(parser);
+  auto result_types = ParseSignatureTypes<kMaxFunctionResults>(parser);
   return {.parameter_types = std::move(parameter_types),
           .result_types = std::move(result_types)};
 }
 
-Limits parse_limits(Stream* parser) {
+Limits ParseLimits(Stream* parser) {
   if (parser->ReadByte()) {
     auto min = leb128::decode<uint32_t>(parser);
     auto max = leb128::decode<uint32_t>(parser);
@@ -135,22 +134,20 @@ Limits parse_limits(Stream* parser) {
   }
 }
 
-TableType parse_tabletype(Stream* parser) {
-  auto reftype = parse_valtype(parser);
+TableType ParseTableType(Stream* parser) {
+  auto reftype = ParseValType(parser);
   if (reftype != ValType::kExternRef && reftype != ValType::kFuncRef) {
     throw ParseException(
         absl::StrFormat("invalid tabletype type: %x", reftype));
   }
-  auto limits = parse_limits(parser);
+  auto limits = ParseLimits(parser);
   return {.limits = limits, .reftype = reftype};
 }
 
-MemType parse_memtype(Stream* parser) {
-  return {.limits = parse_limits(parser)};
-}
+MemType ParseMemType(Stream* parser) { return {.limits = ParseLimits(parser)}; }
 
-GlobalType parse_globaltype(Stream* parser) {
-  auto valtype = parse_valtype(parser);
+GlobalType ParseGlobalType(Stream* parser) {
+  auto valtype = ParseValType(parser);
   auto mut = parser->ReadByte();
   return {.valtype = valtype, .mut = bool(mut)};
 }
@@ -180,9 +177,9 @@ class ModuleBuilder {
   ModuleBuilder& operator=(ModuleBuilder&&) = delete;
   ~ModuleBuilder() = default;
 
-  co::future<> Parse(Stream* parser);
+  co::Future<> Parse(Stream* parser);
 
-  co::future<ParsedModule> Build();
+  co::Future<ParsedModule> Build();
 
  private:
   // The main loop of parsing functions.
@@ -203,33 +200,33 @@ class ModuleBuilder {
   //
   // Around any of these sections can be a custom section, which we
   // currently ignore.
-  co::future<> ParseOneSection(Stream* parser);
+  co::Future<> ParseOneSection(Stream* parser);
 
   // Parses the first section, which is made up of function signatures.
-  co::future<> ParseSignatureSection(Stream*);
+  co::Future<> ParseSignatureSection(Stream*);
 
   // Parses the forward declarations of functions.
-  co::future<> ParseFunctionDeclarationSection(Stream*);
+  co::Future<> ParseFunctionDeclarationSection(Stream*);
 
   // Parses the imports for this module.
   //
   // NOTE: this does not validate that the imports exist. That will need to be
   // done at a later phase (or maybe that should be inputs to this..?)
   ModuleImport ParseOneImport(Stream*);
-  co::future<> ParseImportSection(Stream*);
+  co::Future<> ParseImportSection(Stream*);
 
-  co::future<> ParseTableSection(Stream*);
+  co::Future<> ParseTableSection(Stream*);
 
-  co::future<> ParseMemoriesSection(Stream*);
+  co::Future<> ParseMemoriesSection(Stream*);
 
-  co::future<> ParseGlobalsSection(Stream*);
+  co::Future<> ParseGlobalsSection(Stream*);
 
   ModuleExport ParseOneExport(Stream*);
-  co::future<> ParseExportsSection(Stream*);
+  co::Future<> ParseExportsSection(Stream*);
 
   // Parse a function body
   void ParseOneCode(Stream*, Function*);
-  co::future<> ParseCodeSection(Stream*);
+  co::Future<> ParseCodeSection(Stream*);
 
   // In order to properly be able to stream parsing of modules, we need to
   // ensure everything is created in the correct order. The spec enforces that
@@ -249,13 +246,13 @@ class ModuleBuilder {
   std::optional<FuncIdx> _start;
 };
 
-co::future<ParsedModule> ModuleBuilder::Build() {
+co::Future<ParsedModule> ModuleBuilder::Build() {
   ParsedModule parsed;
   std::swap(_functions, parsed.functions);
   co_return parsed;
 }
 
-co::future<> ModuleBuilder::ParseSignatureSection(Stream* parser) {
+co::Future<> ModuleBuilder::ParseSignatureSection(Stream* parser) {
   auto vector_size = leb128::decode<uint32_t>(parser);
   if (vector_size > kMaxFunctionSignatures) {
     throw ModuleTooLargeException(
@@ -263,20 +260,20 @@ co::future<> ModuleBuilder::ParseSignatureSection(Stream* parser) {
                         kMaxFunctionSignatures));
   }
   for (uint32_t i = 0; i < vector_size; ++i) {
-    _func_signatures.push_back(parse_signature(parser));
+    _func_signatures.push_back(ParseSignature(parser));
     co_await co::MaybeYield();
   }
 }
 
-co::future<> ModuleBuilder::ParseFunctionDeclarationSection(Stream* parser) {
+co::Future<> ModuleBuilder::ParseFunctionDeclarationSection(Stream* parser) {
   auto vector_size = leb128::decode<uint32_t>(parser);
   if (vector_size > MAX_FUNCTIONS) {
     throw ModuleTooLargeException(absl::StrFormat(
         "too many functions: %d, max: %d", vector_size, MAX_FUNCTIONS));
   }
   for (uint32_t i = 0; i < vector_size; ++i) {
-    auto funcidx = parse_funcidx(parser);
-    validate_in_range("unknown function signature", funcidx, _func_signatures);
+    auto funcidx = ParseFuncIdx(parser);
+    ValidateInRange("unknown function signature", funcidx, _func_signatures);
     _functions.push_back({.meta = {
                               .signature = _func_signatures[funcidx.value()],
                           }});
@@ -285,26 +282,26 @@ co::future<> ModuleBuilder::ParseFunctionDeclarationSection(Stream* parser) {
 }
 
 ModuleImport ModuleBuilder::ParseOneImport(Stream* parser) {
-  auto module_name = parse_name(parser);
-  auto name = parse_name(parser);
+  auto module_name = ParseName(parser);
+  auto name = ParseName(parser);
   auto type = parser->ReadByte();
   std::optional<ModuleImport::Description> desc;
   switch (type) {
     case 0x00: {  // func
-      auto funcidx = parse_typeidx(parser);
-      validate_in_range("unknown import function signature", funcidx,
-                        _func_signatures);
+      auto funcidx = ParseTypeIdx(parser);
+      ValidateInRange("unknown import function signature", funcidx,
+                      _func_signatures);
       desc = funcidx;
       break;
     }
     case 0x01:  // table
-      desc = parse_tabletype(parser);
+      desc = ParseTableType(parser);
       break;
     case 0x02:  // memory
-      desc = parse_memtype(parser);
+      desc = ParseMemType(parser);
       break;
     case 0x03:  // global
-      desc = parse_globaltype(parser);
+      desc = ParseGlobalType(parser);
       break;
     default:
       throw ParseException(absl::StrFormat("unknown import type: %x", type));
@@ -315,7 +312,7 @@ ModuleImport ModuleBuilder::ParseOneImport(Stream* parser) {
           .description = desc.value()};
 }
 
-co::future<> ModuleBuilder::ParseImportSection(Stream* parser) {
+co::Future<> ModuleBuilder::ParseImportSection(Stream* parser) {
   auto vector_size = leb128::decode<uint32_t>(parser);
   if (vector_size > kMaxImports) {
     throw ModuleTooLargeException(absl::StrFormat(
@@ -328,9 +325,9 @@ co::future<> ModuleBuilder::ParseImportSection(Stream* parser) {
   }
 }
 
-Table parse_table(Stream* parser) { return {.type = parse_tabletype(parser)}; }
+Table parse_table(Stream* parser) { return {.type = ParseTableType(parser)}; }
 
-co::future<> ModuleBuilder::ParseTableSection(Stream* parser) {
+co::Future<> ModuleBuilder::ParseTableSection(Stream* parser) {
   auto vector_size = leb128::decode<uint32_t>(parser);
   if (vector_size > kMaxTables) {
     throw ModuleTooLargeException(absl::StrFormat(
@@ -343,9 +340,9 @@ co::future<> ModuleBuilder::ParseTableSection(Stream* parser) {
   }
 }
 
-Mem parse_memory(Stream* parser) { return {.type = parse_memtype(parser)}; }
+Mem parse_memory(Stream* parser) { return {.type = ParseMemType(parser)}; }
 
-co::future<> ModuleBuilder::ParseMemoriesSection(Stream* parser) {
+co::Future<> ModuleBuilder::ParseMemoriesSection(Stream* parser) {
   auto vector_size = leb128::decode<uint32_t>(parser);
   if (vector_size > kMaxMemories) {
     throw ModuleTooLargeException(absl::StrFormat(
@@ -395,12 +392,12 @@ Value parse_const_expr(Stream* parser) {
 }
 
 Global parse_global(Stream* parser) {
-  auto type = parse_globaltype(parser);
+  auto type = ParseGlobalType(parser);
   auto value = parse_const_expr(parser);
   return {.type = type, .value = value};
 }
 
-co::future<> ModuleBuilder::ParseGlobalsSection(Stream* parser) {
+co::Future<> ModuleBuilder::ParseGlobalsSection(Stream* parser) {
   auto vector_size = leb128::decode<uint32_t>(parser);
   if (vector_size > kMaxGlobals) {
     throw ModuleTooLargeException(absl::StrFormat(
@@ -414,31 +411,31 @@ co::future<> ModuleBuilder::ParseGlobalsSection(Stream* parser) {
 }
 
 ModuleExport ModuleBuilder::ParseOneExport(Stream* parser) {
-  auto name = parse_name(parser);
+  auto name = ParseName(parser);
   auto type = parser->ReadByte();
   std::optional<ModuleExport::Description> desc;
   switch (type) {
     case 0x00: {  // func
-      auto idx = parse_funcidx(parser);
-      validate_in_range("unknown function export", idx, _functions);
+      auto idx = ParseFuncIdx(parser);
+      ValidateInRange("unknown function export", idx, _functions);
       desc = idx;
       break;
     }
     case 0x01: {  // table
-      auto idx = parse_tableidx(parser);
-      validate_in_range("unknown function export", idx, _tables);
+      auto idx = ParseTableIdx(parser);
+      ValidateInRange("unknown function export", idx, _tables);
       desc = idx;
       break;
     }
     case 0x02: {  // memory
-      auto idx = parse_memidx(parser);
-      validate_in_range("unknown memory export", idx, _memories);
+      auto idx = ParseMemIdx(parser);
+      ValidateInRange("unknown memory export", idx, _memories);
       desc = idx;
       break;
     }
     case 0x03: {  // global
-      auto idx = parse_globalidx(parser);
-      validate_in_range("unknown global export", idx, _globals);
+      auto idx = ParseGlobalIdx(parser);
+      ValidateInRange("unknown global export", idx, _globals);
       desc = idx;
       break;
     }
@@ -448,7 +445,7 @@ ModuleExport ModuleBuilder::ParseOneExport(Stream* parser) {
   return {.name = std::move(name), .description = desc.value()};
 }
 
-co::future<> ModuleBuilder::ParseExportsSection(Stream* parser) {
+co::Future<> ModuleBuilder::ParseExportsSection(Stream* parser) {
   auto vector_size = leb128::decode<uint32_t>(parser);
   if (vector_size > kMaxExports) {
     throw ModuleTooLargeException(absl::StrFormat(
@@ -461,8 +458,8 @@ co::future<> ModuleBuilder::ParseExportsSection(Stream* parser) {
   }
 }
 
-std::vector<Instruction> parse_expression(Stream* parser,
-                                          FunctionValidator* validator) {
+std::vector<Instruction> ParseExpression(Stream* parser,
+                                         FunctionValidator* validator) {
   std::vector<Instruction> instruction_vector;
   // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
   for (auto opcode = parser->ReadByte(); opcode != 0x0B;
@@ -512,11 +509,11 @@ void ModuleBuilder::ParseOneCode(Stream* parser, Function* func) {
       throw ModuleTooLargeException(absl::StrFormat(
           "too many locals: %d", num_locals + func->meta.locals.size()));
     }
-    auto valtype = parse_valtype(parser);
+    auto valtype = ParseValType(parser);
     std::fill_n(std::back_inserter(func->meta.locals), num_locals, valtype);
   }
   FunctionValidator validator(func->meta.signature, func->meta.locals);
-  func->body = parse_expression(parser, &validator);
+  func->body = ParseExpression(parser, &validator);
   func->meta.max_stack_size_bytes = validator.maximum_stack_size_bytes();
 
   auto actual = parser->BytesConsumed() - start_position;
@@ -527,7 +524,7 @@ void ModuleBuilder::ParseOneCode(Stream* parser, Function* func) {
   }
 }
 
-co::future<> ModuleBuilder::ParseCodeSection(Stream* parser) {
+co::Future<> ModuleBuilder::ParseCodeSection(Stream* parser) {
   auto vector_size = leb128::decode<uint32_t>(parser);
   // We don't need to check the max size because we did that for _functions
   if (vector_size != _functions.size()) {
@@ -543,7 +540,7 @@ co::future<> ModuleBuilder::ParseCodeSection(Stream* parser) {
   }
 }
 
-co::future<> ModuleBuilder::ParseOneSection(Stream* parser) {
+co::Future<> ModuleBuilder::ParseOneSection(Stream* parser) {
   auto id = parser->ReadByte();
 
   if (id != 0 && id <= _latest_section_read) {
@@ -585,8 +582,8 @@ co::future<> ModuleBuilder::ParseOneSection(Stream* parser) {
       co_await ParseExportsSection(parser);
       co_return;
     case 0x08: {  // start section
-      auto start_funcidx = parse_funcidx(parser);
-      validate_in_range("start function", start_funcidx, _functions);
+      auto start_funcidx = ParseFuncIdx(parser);
+      ValidateInRange("start function", start_funcidx, _functions);
       _start = start_funcidx;
       co_return;
     }
@@ -606,7 +603,7 @@ co::future<> ModuleBuilder::ParseOneSection(Stream* parser) {
   // NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
 }
 
-co::future<> ModuleBuilder::Parse(Stream* parser) {
+co::Future<> ModuleBuilder::Parse(Stream* parser) {
   bytes magic(4, 0);
   size_t amt = parser->ReadBytes(magic);
   if (amt != magic.size()) {
@@ -622,8 +619,8 @@ co::future<> ModuleBuilder::Parse(Stream* parser) {
   if (amt != magic.size()) {
     throw EndOfStreamException();
   }
-  static const bytes kVersion = bytes({0x00, 0x00, 0x00, 0x01});
-  if (magic != kVersion) {
+  static const bytes kVersionOne = bytes({0x01, 0x00, 0x00, 0x00});
+  if (magic != kVersionOne) {
     throw ParseException("unsupported wasm version");
   }
   while (parser->HasRemaining()) {
@@ -634,7 +631,7 @@ co::future<> ModuleBuilder::Parse(Stream* parser) {
 
 }  // namespace
 
-co::future<ParsedModule> parse_module(Stream* stream) {
+co::Future<ParsedModule> ParseModule(Stream* stream) {
   ModuleBuilder builder;
   co_await builder.Parse(stream);
   co_return co_await builder.Build();

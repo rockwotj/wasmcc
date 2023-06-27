@@ -34,3 +34,12 @@ cc_library(
   visibility = ["//visibility:public"],
 )
 
+cc_test(
+  name = "parser_test",
+  srcs = ["parser_test.cc"],
+  size = "small",
+  deps = [
+    ":parser",
+    "//third_party/gtest:gtest_main",
+  ],
+)
