@@ -7,7 +7,7 @@ build:dbg --copt=-fsanitize=address,undefined --linkopt=-fsanitize=address,undef
 build:dbg --copt=-DADDRESS_SANITIZER=1 --copt=-DUNDEFINED_SANITIZER=1
 build:dbg --action_env=UBSAN_OPTIONS=halt_on_error=1:print_stacktrace=1
 # Workaround for https://github.com/bazelbuild/bazel/issues/11122
-build:dbg --linkopt=-fsanitize-link-c++-runtime --linkopt=--driver-mode=g++
+build:dbg --copt=-fsanitize-link-c++-runtime --linkopt=-fsanitize-link-c++-runtime --linkopt=--driver-mode=g++
 
 build:opt --compilation_mode=opt
 
