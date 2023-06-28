@@ -17,8 +17,14 @@ cc_library(
         "-Wno-deprecated-anon-enum-enum-conversion",
         "-Wno-deprecated-enum-enum-conversion",
         "-fno-threadsafe-statics",
+    ] + select({
+      "@platforms//os:osx": [
+        "-Wno-unused-function",
+      ],
+      "@platforms//os:linux": [
         "-fno-semantic-interposition",
-    ],
+      ],
+    }),
     includes = [
         "asmjit/",
         "src/",

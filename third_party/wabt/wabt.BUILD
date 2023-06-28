@@ -42,14 +42,6 @@ cc_library(
         "src/prebuilt/*.cc",
     ]),
     deps = [":picosha2"],
-)
-
-cc_binary(
-    name = "wast2json",
-    srcs = [
-        "src/tools/wast2json.cc",
-    ],
-    deps = [":wabt"],
     testonly = True,
     visibility = ["//visibility:public"],
 )
