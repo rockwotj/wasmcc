@@ -61,7 +61,7 @@ class [[nodiscard("must not drop futures")]] Future {
  public:
   // coroutine interface
   using promise_type = detail::Promise<T>;
-  explicit Future(promise_type* p) noexcept
+  explicit Future(promise_type * p) noexcept
       : _handle(std::coroutine_handle<promise_type>::from_promise(*p)) {}
 
   T get() {
@@ -74,8 +74,8 @@ class [[nodiscard("must not drop futures")]] Future {
 
   // awaitable interface
   constexpr bool await_ready() const noexcept { return false; }
-  std::coroutine_handle<> await_suspend(
-      std::coroutine_handle<> parent) const noexcept {
+  std::coroutine_handle<> await_suspend(std::coroutine_handle<> parent)
+      const noexcept {
     _handle.promise()._chain.parent = parent;
     return _handle;
   }
@@ -83,15 +83,14 @@ class [[nodiscard("must not drop futures")]] Future {
     if (_handle.promise()._result.index() == 1) {
       return std::move(std::get<1>(_handle.promise()._result));
     } else {
-      std::rethrow_exception(
-          std::get<std::exception_ptr>(_handle.promise()._result));
+      std::rethrow_exception(std::get<2>(_handle.promise()._result));
     }
   };
 
   // resource management
   Future(Future&) = delete;
   Future& operator=(Future&) = delete;
-  Future(Future&& moved) noexcept
+  Future(Future && moved) noexcept
       : _handle(std::exchange(moved._handle, nullptr)) {}
   Future& operator=(Future&& moved) noexcept {
     _handle = std::exchange(moved._handle, nullptr);
