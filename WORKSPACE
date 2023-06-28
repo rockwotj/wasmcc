@@ -1,6 +1,7 @@
 workspace(name = "wasmcc")
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "new_git_repository")
 
 # Hedron's Compile Commands Extractor for Bazel
 # https://github.com/hedronvision/bazel-compile-commands-extractor
@@ -40,25 +41,25 @@ http_archive(
 )
 
 http_archive(
-    name = "rules_foreign_cc",
-    strip_prefix = "rules_foreign_cc-6ecc134b114f6e086537f5f0148d166467042226",
-    sha256 = "059d1d1ec0819b316d05eb7f9f0e07c5cf9636e0cbb224d445162f2d0690191e",
-    url = "https://github.com/bazelbuild/rules_foreign_cc/archive/6ecc134b114f6e086537f5f0148d166467042226.tar.gz",
-)
-
-http_archive(
     name = "nlohmann_json",
     url = "https://github.com/nlohmann/json/releases/download/v3.11.2/json.tar.xz",
     sha256 = "8c4b26bf4b422252e13f332bc5e388ec0ab5c3443d24399acb675e68278d341f",
     build_file = "//third_party/json:json.BUILD",
 )
 
+http_archive(
+    name = "com_github_webassembly_wabt",
+    url = "https://github.com/WebAssembly/wabt/releases/download/1.0.33/wabt-1.0.33.tar.xz",
+    strip_prefix = "wabt-1.0.33",
+    sha256 = "67f74a55d8e5e811b74443d40707a6fc814cadc3f2b60e11153c32c16922c182",
+    build_file = "//third_party/wabt:wabt.BUILD",
+    patch_args = ["-p1"],
+    patches = ["//third_party/wabt:config.patch"],
+)
+
 load("@hedron_compile_commands//:workspace_setup.bzl", "hedron_compile_commands_setup")
 
 hedron_compile_commands_setup()
 
-load("@rules_foreign_cc//foreign_cc:repositories.bzl", "rules_foreign_cc_dependencies")
-
-rules_foreign_cc_dependencies()
 
 

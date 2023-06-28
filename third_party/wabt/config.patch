@@ -1,0 +1,71 @@
+diff --git a/src/config.h.in b/src/config.h.in
+index f7187c32..8eab88af 100644
+--- a/src/config.h.in
++++ b/src/config.h.in
+@@ -20,43 +20,51 @@
+ #include <stdint.h>
+ #include <stdlib.h>
+ 
+-#cmakedefine WABT_VERSION_STRING "@WABT_VERSION_STRING@"
++// #cmakedefine WABT_VERSION_STRING "@WABT_VERSION_STRING@"
++#define WABT_VERSION_STRING "1.0.33"
+ 
+-#cmakedefine WABT_DEBUG @WABT_DEBUG@
++// #cmakedefine WABT_DEBUG @WABT_DEBUG@
++#define WABT_DEBUG 0
+ 
+ /* TODO(binji): nice way to define these with WABT_ prefix? */
+ 
+ /* Whether <alloca.h> is available */
+-#cmakedefine01 HAVE_ALLOCA_H
++// #cmakedefine01 HAVE_ALLOCA_H
++#define HAVE_ALLOCA_H 1
+ 
+ /* Whether <unistd.h> is available */
+-#cmakedefine01 HAVE_UNISTD_H
++// #cmakedefine01 HAVE_UNISTD_H
++#define HAVE_UNISTD_H 1
++
+ 
+ /* Whether snprintf is defined by stdio.h */
+-#cmakedefine01 HAVE_SNPRINTF
++// #cmakedefine01 HAVE_SNPRINTF
++#define HAVE_SNPRINTF 1
+ 
+ /* Whether ssize_t is defined by stddef.h */
+-#cmakedefine01 HAVE_SSIZE_T
++// #cmakedefine01 HAVE_SSIZE_T
++#define HAVE_SSIZE_T 1
+ 
+ /* Whether strcasecmp is defined by strings.h */
+-#cmakedefine01 HAVE_STRCASECMP
++// #cmakedefine01 HAVE_STRCASECMP
++#define HAVE_STRCASECMP 1
+ 
+ /* Whether ENABLE_VIRTUAL_TERMINAL_PROCESSING is defined by windows.h */
+-#cmakedefine01 HAVE_WIN32_VT100
++#define HAVE_WIN32_VT100 0
+ 
+ /* Whether the target architecture is big endian */
+-#cmakedefine01 WABT_BIG_ENDIAN
++#define WABT_BIG_ENDIAN 0
+ 
+ /* Whether <openssl/sha.h> is available */
+-#cmakedefine01 HAVE_OPENSSL_SHA_H
++#define HAVE_OPENSSL_SHA_H 0
+ 
+-#cmakedefine01 COMPILER_IS_CLANG
+-#cmakedefine01 COMPILER_IS_GNU
+-#cmakedefine01 COMPILER_IS_MSVC
++#define COMPILER_IS_CLANG 1
++#define COMPILER_IS_GNU 0
++#define COMPILER_IS_MSVC 0
+ 
+-#cmakedefine01 WITH_EXCEPTIONS
++#define WITH_EXCEPTIONS 1
+ 
+-#define SIZEOF_SIZE_T @SIZEOF_SIZE_T@
++#define SIZEOF_SIZE_T sizeof(size_t)
+ 
+ #if HAVE_ALLOCA_H
+ #include <alloca.h>
