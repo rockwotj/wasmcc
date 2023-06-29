@@ -35,8 +35,8 @@ cc_library(
 
 cc_library(
     name = "stream",
-    hdrs = ["stream.h"],
     srcs = ["stream.cc"],
+    hdrs = ["stream.h"],
     deps = [":bytes"],
 )
 
@@ -45,8 +45,8 @@ cc_test(
     size = "small",
     srcs = ["stream_test.cc"],
     deps = [
-        ":stream",
         ":bytes",
+        ":stream",
         "//third_party/gtest:gtest_main",
     ],
 )
