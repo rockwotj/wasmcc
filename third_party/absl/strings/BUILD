@@ -1,12 +1,14 @@
-
-alias(
-  name = "strings",
-  actual = "@com_google_absl//absl/strings",
-  visibility = ["//visibility:public"],
+package(
+    default_visibility = ["//visibility:public"],
 )
 
-alias(
-  name = "str_format",
-  actual = "@com_google_absl//absl/strings:str_format",
-  visibility = ["//visibility:public"],
-)
+[
+    alias(
+        name = lib,
+        actual = "@com_google_absl//absl/strings:" + lib,
+    )
+    for lib in [
+        "strings",
+        "str_format",
+    ]
+]

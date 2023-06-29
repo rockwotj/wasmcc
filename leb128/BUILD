@@ -1,11 +1,11 @@
 cc_library(
-  name = "leb128",
-  hdrs = ["leb128.h"],
-  deps = [
-    "//base:stream",
-    "//base:bytes",
-  ],
-  visibility = ["//visibility:public"],
+    name = "leb128",
+    hdrs = ["leb128.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//base:bytes",
+        "//base:stream",
+    ],
 )
 
 cc_test(
@@ -14,8 +14,8 @@ cc_test(
     srcs = ["leb128_test.cc"],
     deps = [
         ":leb128",
-        "//base:stream",
         "//base:bytes",
+        "//base:stream",
         "//third_party/gtest:gtest_main",
     ],
 )

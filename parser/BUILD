@@ -1,45 +1,44 @@
-
 cc_library(
-  name = "validator",
-  hdrs = ["validator.h"],
-  srcs = ["validator.cc"],
-  deps = [
-    "//core:ast",
-    "//base:type_traits",
-  ],
+    name = "validator",
+    srcs = ["validator.cc"],
+    hdrs = ["validator.h"],
+    deps = [
+        "//base:type_traits",
+        "//core:ast",
+    ],
 )
 
 cc_test(
-  name = "validator_test",
-  srcs = ["validator_test.cc"],
-  size = "small",
-  deps = [
-    ":validator",
-    "//third_party/gtest:gtest_main",
-  ],
+    name = "validator_test",
+    size = "small",
+    srcs = ["validator_test.cc"],
+    deps = [
+        ":validator",
+        "//third_party/gtest:gtest_main",
+    ],
 )
 
 cc_library(
-  name = "parser",
-  hdrs = ["parser.h"],
-  srcs = ["parser.cc"],
-  deps = [
-    "//core:ast",
-    "//base:stream",
-    "//base:coro",
-    "//leb128",
-    ":validator",
-    "//third_party/absl/strings:str_format",
-  ],
-  visibility = ["//visibility:public"],
+    name = "parser",
+    srcs = ["parser.cc"],
+    hdrs = ["parser.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":validator",
+        "//base:coro",
+        "//base:stream",
+        "//core:ast",
+        "//leb128",
+        "//third_party/absl/strings:str_format",
+    ],
 )
 
 cc_test(
-  name = "parser_test",
-  srcs = ["parser_test.cc"],
-  size = "small",
-  deps = [
-    ":parser",
-    "//third_party/gtest:gtest_main",
-  ],
+    name = "parser_test",
+    size = "small",
+    srcs = ["parser_test.cc"],
+    deps = [
+        ":parser",
+        "//third_party/gtest:gtest_main",
+    ],
 )

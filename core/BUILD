@@ -3,24 +3,24 @@ package(
 )
 
 cc_library(
-  name = "value",
-  hdrs = ["value.h"],
-  srcs = ["value.cc"], 
+    name = "value",
+    srcs = ["value.cc"],
+    hdrs = ["value.h"],
 )
 
 cc_library(
-  name = "instruction",
-  hdrs = ["instruction.h"],
-  deps = [":value"],
+    name = "instruction",
+    hdrs = ["instruction.h"],
+    deps = [":value"],
 )
 
 cc_library(
-  name = "ast",
-  hdrs = ["ast.h"],
-  deps = [
-    ":value",
-    ":instruction",
-    "//base:bytes",
-    "//base:named_type",
-  ],
+    name = "ast",
+    hdrs = ["ast.h"],
+    deps = [
+        ":instruction",
+        ":value",
+        "//base:bytes",
+        "//base:named_type",
+    ],
 )
