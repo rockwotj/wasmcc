@@ -360,9 +360,9 @@ Value parse_const_expr(Stream* parser) {
   // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
   switch (opcode) {
     case 0x41:
-      return Value{.i32 = leb128::decode<uint32_t>(parser)};
+      return Value::U32(leb128::decode<uint32_t>(parser));
     case 0x42:
-      return Value{.i64 = leb128::decode<uint64_t>(parser)};
+      return Value::U64(leb128::decode<uint64_t>(parser));
     case 0x43: {
       bytes b(sizeof(float), 0);
       size_t amt = parser->ReadBytes(b);
@@ -371,7 +371,7 @@ Value parse_const_expr(Stream* parser) {
       }
       float result = 0;
       std::memcpy(&result, b.data(), b.size());
-      return Value{.f32 = result};
+      return Value::F32(result);
     }
     case 0x44: {
       bytes b(sizeof(double), 0);
@@ -381,7 +381,7 @@ Value parse_const_expr(Stream* parser) {
       }
       double result = 0;
       std::memcpy(&result, b.data(), b.size());
-      return Value{.f64 = result};
+      return Value::F64(result);
     }
     default:
       // TODO: Support refs, other global references, and vectors
@@ -481,7 +481,7 @@ std::vector<Instruction> ParseExpression(Stream* parser,
       }
       case 0x41: {  // const_i32
         auto v = leb128::decode<uint32_t>(parser);
-        i = op::ConstI32(Value{.i32 = v});
+        i = op::ConstI32(Value::U32(v));
         break;
       }
       case 0x6A:  // add_i32
@@ -515,6 +515,7 @@ void ModuleBuilder::ParseOneCode(Stream* parser, Function* func) {
   FunctionValidator validator(func->meta.signature, func->meta.locals);
   func->body = ParseExpression(parser, &validator);
   func->meta.max_stack_size_bytes = validator.maximum_stack_size_bytes();
+  func->meta.max_stack_elements = validator.maximum_stack_elements();
 
   auto actual = parser->BytesConsumed() - start_position;
   if (actual != expected_size) {

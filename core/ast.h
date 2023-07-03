@@ -74,6 +74,7 @@ struct Function {
     FunctionSignature signature;
     std::vector<ValType> locals;
     uint32_t max_stack_size_bytes;
+    uint32_t max_stack_elements;
   };
   Metadata meta;
   std::vector<Instruction> body;

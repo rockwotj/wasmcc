@@ -8,6 +8,9 @@ cc_library(
         "exception.h",
         "util.h",
     ],
+    visibility = [
+        "//compiler:__subpackages__",
+    ],
     deps = [
         "//third_party/asmjit",
     ],
