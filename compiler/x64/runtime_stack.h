@@ -11,7 +11,7 @@ namespace wasmcc::x64 {
 struct RuntimeValue {
   // The offset relative to the base of the stack in memory where this stack
   // value can spill to if not in a register.
-  int64_t stack_pointer = 0;
+  int32_t stack_pointer = 0;
   // The register that this value is located in.
   std::optional<asmjit::x86::Gp> reg;
   // The type of this register
@@ -44,16 +44,16 @@ class RuntimeStack {
   RuntimeValue* Peek();
   const RuntimeValue* Peek() const;
 
-  std::span<const RuntimeValue> ReverseIterator() const;
+  std::span<RuntimeValue> ReverseIterator();
 
   // The current offset in bytes from the bottom of current function's stack.
-  size_t pointer() const noexcept { return _stack_memory_offset; }
+  int32_t pointer() const noexcept { return _stack_memory_offset; }
 
  private:
   RegisterTracker* _reg_tracker;
   // The current pointer to the stack in memory, relative to the top of the
   // stack for this calling frame.
-  int64_t _stack_memory_offset{0};
+  int32_t _stack_memory_offset{0};
   // The current stack size
   size_t _stack_size{0};
   UnderlyingType _stack;

@@ -24,3 +24,13 @@ cc_library(
         "//base:named_type",
     ],
 )
+
+cc_test(
+  name = "value_test",
+  srcs = ["value_test.cc"],
+  size = "small",
+  deps = [
+    ":value",
+    "//third_party/gtest:gtest_main",
+  ],
+)

@@ -4,6 +4,8 @@
 #include <utility>
 #include <vector>
 
+#include "core/value.h"
+
 namespace wasmcc {
 
 ValidationType::ValidationType(ValType vt) : _type(uint8_t(vt)) {}
@@ -27,23 +29,12 @@ bool ValidationType::is_ref() const {
 }
 size_t ValidationType::size_bytes() const {
   switch (_type) {
-    case uint8_t(ValType::kI32):
-      return sizeof(int32_t);
-    case uint8_t(ValType::kI64):
-      return sizeof(uint64_t);
-    case uint8_t(ValType::kF32):
-      return sizeof(float);
-    case uint8_t(ValType::kF64):
-      return sizeof(double);
     case kAnyTypeValue:  // Assume worst case for anytype
-    case uint8_t(ValType::kV128):
       return sizeof(uint64_t) * 2;
     case kAnyRefTypeValue:
-    case uint8_t(ValType::kFuncRef):
-    case uint8_t(ValType::kExternRef):
-      return sizeof(void*);
+      return sizeof(intptr_t);
     default:
-      __builtin_unreachable();
+      return ValTypeSizeBytes(ValType(_type));
   }
 }
 std::ostream& operator<<(std::ostream& os, ValidationType vt) {

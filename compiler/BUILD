@@ -1,6 +1,7 @@
 cc_library(
     name = "compiler",
     srcs = [
+        "compiler.cc",
         "function.cc",
     ],
     hdrs = [
@@ -9,6 +10,8 @@ cc_library(
     ],
     deps = [
         "//base:coro",
+        "//compiler/common",
+        "//compiler/x64",
         "//core:ast",
     ],
 )

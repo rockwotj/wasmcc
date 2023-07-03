@@ -1,3 +1,6 @@
+#include <memory>
+#include <random>
+
 #include "base/coro.h"
 #include "compiler/function.h"
 #include "core/ast.h"
@@ -11,6 +14,11 @@ namespace wasmcc {
  */
 class Compiler {
  public:
+  /**
+   * Create a compiler using a FunctionCompiler for the current platform.
+   */
+  static std::unique_ptr<Compiler> CreateNative();
+
   Compiler() = default;
   Compiler(const Compiler&) = delete;
   Compiler& operator=(const Compiler&) = delete;
