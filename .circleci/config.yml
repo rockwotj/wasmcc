@@ -17,8 +17,12 @@ jobs:
       - setup
       - run:
           name: 'Run tests'
+          environment:
+            GTEST_OUTPUT: "xml:/tmp/gtest_output"
           command: |
-            bazel test --config=dbg //...
+            bazel test --config=dbg --test_output=errors //...
+      - store_test_results:
+          path: /tmp/gtest_output
   arm64-test:
     machine:
       image: ubuntu-2204:current
@@ -28,10 +32,14 @@ jobs:
       - setup
       - run:
           name: 'Run tests'
+          environment:
+            GTEST_OUTPUT: "xml:/tmp/gtest_output"
           command: |
             # We don't run with ubsan mode because of clang linking bugs:
             # See: https://github.com/envoyproxy/envoy/issues/13973
-            bazel test --config=asan //...
+            bazel test --config=asan --test_output=errors //...
+      - store_test_results:
+          path: /tmp/gtest_output
 
 workflows:
   wasmcc:
