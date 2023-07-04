@@ -29,7 +29,7 @@ bytes encode(int_type value) {
       } else {
         byte |= leading_bit_mask;
       }
-      output.append(&byte, 1);
+      output.push_back(byte);
     }
   } else {
     // NOLINTNEXTLINE(cppcoreguidelines-avoid-do-while)
@@ -39,7 +39,7 @@ bytes encode(int_type value) {
       if (value != 0) {
         byte |= leading_bit_mask;
       }
-      output.append(&byte, 1);
+      output.push_back(byte);
     } while (value != 0);
   }
 

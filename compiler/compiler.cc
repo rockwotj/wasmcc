@@ -32,8 +32,24 @@ class CompilerImpl : public Compiler {
     co_return CompiledFunction(compiled);
   }
 
+  co::Future<CompiledModule> Compile(ParsedModule parsed) override {
+    CompiledModule compiled{.exported_functions = parsed.exported_functions};
+    compiled.functions.reserve(parsed.functions.size());
+    for (auto& func : parsed.functions) {
+      compiled.functions.push_back(co_await Compile(std::move(func)));
+    }
+    co_return std::move(compiled);
+  }
+
   void Release(CompiledFunction compiled) override {
     _runtime.release(compiled.get());
+  }
+
+  co::Future<> Release(CompiledModule compiled) override {
+    for (const auto& func : compiled.functions) {
+      Release(func);
+      co_await co::MaybeYield();
+    }
   }
 
  private:
