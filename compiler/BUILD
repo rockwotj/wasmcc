@@ -16,3 +16,20 @@ cc_library(
         "//third_party/absl/container:flat_hash_map",
     ],
 )
+
+cc_test(
+    name = "compiler_test",
+    size = "small",
+    srcs = ["compiler_test.cc"],
+    deps = [
+        ":compiler",
+        "//base:stream",
+        "//testing:wat",
+        "//parser",
+        "//third_party/gtest:gtest_main",
+    ],
+    target_compatible_with = [
+      # TODO: Implement arm64 support
+      "@platforms//cpu:x86_64",
+    ],
+)
