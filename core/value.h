@@ -16,19 +16,37 @@ enum class ValType : uint8_t {
   kFuncRef = 0x70,
   kExternRef = 0x6F,
 };
-bool is_32bit(ValType);
-bool is_64bit(ValType);
+bool IsValType32Bit(ValType);
+bool IsValType64Bit(ValType);
+size_t ValTypeSizeBytes(ValType);
 
 std::ostream& operator<<(std::ostream&, ValType);
 
 /**
  * See: https://webassembly.github.io/spec/core/syntax/types.html
  */
-union Value {
-  uint32_t i32;
-  uint64_t i64;
-  float f32;
-  double f64;
+class Value {
+ public:
+  Value() = default;
+  static Value I32(int32_t);
+  static Value U32(uint32_t);
+  static Value I64(int64_t);
+  static Value U64(uint64_t);
+  static Value F32(float);
+  static Value F64(double);
+
+  int32_t AsI32() const;
+  uint32_t AsU32() const;
+  int64_t AsI64() const;
+  uint64_t AsU64() const;
+  float AsF32() const;
+  double AsF64() const;
+
+  bool operator==(const Value&) const = default;
+
+ private:
+  explicit Value(uint64_t);
+  uint64_t _underlying;
 };
 std::ostream& operator<<(std::ostream&, ValType);
 }  // namespace wasmcc

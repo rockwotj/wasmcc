@@ -7,21 +7,24 @@
 namespace wasmcc {
 
 struct MoveOnly {
-  explicit MoveOnly(int f) : foo(f){};
+  explicit MoveOnly(int f) : _foo(f){};
   MoveOnly(const MoveOnly&) = delete;
   MoveOnly& operator=(const MoveOnly&) = delete;
   MoveOnly(MoveOnly&&) = default;
   MoveOnly& operator=(MoveOnly&&) = default;
   ~MoveOnly() = default;
 
-  int foo;
+  int foo() const noexcept { return _foo; }
+
+ private:
+  int _foo;
 };
 
 co::Future<MoveOnly> m() { co_return MoveOnly(1); }
 co::Future<MoveOnly> n() {
   auto a = co_await m();
   auto b = co_await m();
-  co_return MoveOnly(a.foo + b.foo);
+  co_return MoveOnly(a.foo() + b.foo());
 }
 
 co::Future<int> f() { co_return 4; }
@@ -48,7 +51,7 @@ TEST(CoroutineTests, MaybeYield) { co::MaybeYield().get(); }
 
 TEST(CoroutineTests, MoveOnly) {
   co::Future<MoveOnly> f = n();
-  EXPECT_EQ(f.get().foo, 2);
+  EXPECT_EQ(f.get().foo(), 2);
 }
 
 }  // namespace wasmcc
