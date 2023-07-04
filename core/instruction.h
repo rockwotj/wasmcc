@@ -9,8 +9,8 @@ namespace wasmcc {
 namespace op {
 // Push the constant onto the top of the stack.
 struct ConstI32 {
-  explicit ConstI32(uint32_t v) : value({.i32 = v}) {}
-  explicit ConstI32(int32_t v) : value({.i32 = uint32_t(v)}) {}
+  explicit ConstI32(uint32_t v) : value(Value::U32(v)) {}
+  explicit ConstI32(int32_t v) : value(Value::I32(v)) {}
   explicit ConstI32(Value v) : value(v) {}
   Value value;
 };
