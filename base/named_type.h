@@ -15,6 +15,7 @@ namespace wasmcc {
 template <typename T, typename Tag>
 class NamedType {
  public:
+  NamedType() = default;
   explicit NamedType(T value) : _value(std::move(value)) {}
   NamedType(const NamedType&) = default;
   NamedType& operator=(const NamedType&) = default;
