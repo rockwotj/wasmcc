@@ -1,4 +1,10 @@
 #pragma once
+#include <string>
+#include <vector>
+
+#include "absl/container/flat_hash_map.h"
+#include "core/ast.h"
+
 namespace wasmcc {
 /**
  * A strongly typed wrapper around dynamically created code.
@@ -17,6 +23,11 @@ class CompiledFunction {
 
  private:
   void* _ptr;
+};
+
+struct CompiledModule {
+  std::vector<CompiledFunction> functions;
+  absl::flat_hash_map<Name, FuncIdx> exported_functions;
 };
 
 }  // namespace wasmcc
