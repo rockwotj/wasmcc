@@ -29,6 +29,7 @@ cc_library(
         "//base:stream",
         "//core:ast",
         "//leb128",
+        "//third_party/absl/container:flat_hash_set",
         "//third_party/absl/strings:str_format",
     ],
 )
@@ -39,6 +40,7 @@ cc_test(
     srcs = ["parser_test.cc"],
     deps = [
         ":parser",
+        "//testing:wat",
         "//third_party/gtest:gtest_main",
     ],
 )

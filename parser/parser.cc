@@ -8,8 +8,10 @@
 #include <iterator>
 #include <string>
 #include <utility>
+#include <variant>
 #include <vector>
 
+#include "absl/container/flat_hash_set.h"
 #include "absl/strings/str_format.h"
 #include "base/bytes.h"
 #include "base/coro.h"
@@ -249,6 +251,12 @@ class ModuleBuilder {
 co::Future<ParsedModule> ModuleBuilder::Build() {
   ParsedModule parsed;
   std::swap(_functions, parsed.functions);
+  for (const auto& exprt : _exports) {
+    if (std::holds_alternative<FuncIdx>(exprt.description)) {
+      parsed.exported_functions.emplace(exprt.name,
+                                        std::get<FuncIdx>(exprt.description));
+    }
+  }
   co_return parsed;
 }
 
@@ -451,9 +459,13 @@ co::Future<> ModuleBuilder::ParseExportsSection(Stream* parser) {
     throw ModuleTooLargeException(absl::StrFormat(
         "too many exports: %d, max: %d", vector_size, kMaxExports));
   }
-
+  absl::flat_hash_set<std::string_view> names;
   for (uint32_t i = 0; i < vector_size; ++i) {
     _exports.push_back(ParseOneExport(parser));
+    auto [it, inserted] = names.insert(_exports.back().name.value());
+    if (!inserted) [[unlikely]] {
+      throw ParseException(absl::StrFormat("duplicate exported name: %s", *it));
+    }
     co_await co::MaybeYield();
   }
 }

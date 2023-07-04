@@ -27,6 +27,11 @@ class NamedType {
 
   friend bool operator<=>(NamedType<T, Tag>, NamedType<T, Tag>) = default;
 
+  template <typename H>
+  friend H AbslHashValue(H h, const NamedType<T, Tag>& t) {
+    return H::combine(std::move(h), t._value);
+  }
+
  private:
   T _value;
 };
