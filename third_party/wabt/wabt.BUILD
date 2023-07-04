@@ -23,10 +23,12 @@ cc_library(
             "src/*.cc",
             "src/*.c",
             "src/interp/*.cc",
+            "src/prebuilt/*.cc",
         ],
         exclude = [
             "src/test-*.cc",
             "src/interp/interp-wasm-c-api.cc",
+            "src/prebuilt/lexer-keywords.cc",
         ],
     ),
     hdrs = glob([
@@ -39,7 +41,6 @@ cc_library(
     ],
     strip_include_prefix = "include",
     textual_hdrs = glob([
-        "src/prebuilt/*.cc",
     ]),
     deps = [":picosha2"],
     testonly = True,

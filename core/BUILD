@@ -22,15 +22,16 @@ cc_library(
         ":value",
         "//base:bytes",
         "//base:named_type",
+        "//third_party/absl/container:flat_hash_map",
     ],
 )
 
 cc_test(
-  name = "value_test",
-  srcs = ["value_test.cc"],
-  size = "small",
-  deps = [
-    ":value",
-    "//third_party/gtest:gtest_main",
-  ],
+    name = "value_test",
+    size = "small",
+    srcs = ["value_test.cc"],
+    deps = [
+        ":value",
+        "//third_party/gtest:gtest_main",
+    ],
 )
