@@ -4,6 +4,7 @@
 #include <variant>
 #include <vector>
 
+#include "absl/container/flat_hash_map.h"
 #include "base/bytes.h"
 #include "base/named_type.h"
 #include "instruction.h"
@@ -82,5 +83,7 @@ struct Function {
 
 struct ParsedModule {
   std::vector<Function> functions;
+  absl::flat_hash_map<Name, FuncIdx> exported_functions;
 };
+
 }  // namespace wasmcc

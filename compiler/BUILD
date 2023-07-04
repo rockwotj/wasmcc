@@ -13,5 +13,6 @@ cc_library(
         "//compiler/common",
         "//compiler/x64",
         "//core:ast",
+        "//third_party/absl/container:flat_hash_map",
     ],
 )
