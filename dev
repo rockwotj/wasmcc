@@ -2,12 +2,15 @@
 
 import readline
 import platform
+from pathlib import Path
 from glob import glob
+import inspect
 import argparse
 import shlex
 import subprocess
 import sys
 import os
+import shutil
 
 
 def update_alternatives(version: int, priority: int, master: str,
@@ -186,6 +189,13 @@ def fmt():
             file,
         ])
 
+def collect_test_results(args: argparse.Namespace):
+    output: Path = args.output
+    output.mkdir(parents=True, exist_ok=True)
+    for file in glob("bazel-testlogs/**/test.xml", recursive=True):
+        test_output_path = Path(file).relative_to("bazel-testlogs").parent
+        output_file_name = str(test_output_path.with_suffix(".xml")).replace("/", "_")
+        shutil.copy(src=file, dst=output / output_file_name)
 
 parser = argparse.ArgumentParser(exit_on_error=False)
 subparsers = parser.add_subparsers()
@@ -196,9 +206,12 @@ parser_lsp.set_defaults(func=rlsp)
 parser_deps = subparsers.add_parser('ci-setup')
 parser_deps.set_defaults(func=install_ci_deps)
 
-parser_deps = subparsers.add_parser('fmt')
-parser_deps.set_defaults(func=fmt)
+parser_fmt = subparsers.add_parser('fmt')
+parser_fmt.set_defaults(func=fmt)
 
+parser_test_results = subparsers.add_parser('collect-test-results')
+parser_test_results.add_argument('output', type=Path)
+parser_test_results.set_defaults(func=collect_test_results)
 
 def print_help():
     print(parser.format_help())
@@ -211,7 +224,11 @@ def evaluate(line):
     except argparse.ArgumentError:
         pass
     if args is not None and hasattr(args, 'func'):
-        args.func()
+        sig = inspect.signature(args.func)
+        if len(sig.parameters):
+            args.func(args)
+        else:
+            args.func()
     else:
         print("unknown command")
         print_help()
@@ -221,7 +238,11 @@ if __name__ == '__main__':
     # Dispatch the function or loop
     args = parser.parse_args()
     if hasattr(args, 'func'):
-        ret_code = args.func()
+        sig = inspect.signature(args.func)
+        if len(sig.parameters):
+            ret_code = args.func(args)
+        else:
+            ret_code = args.func()
         sys.exit(ret_code)
     else:
         while True:

@@ -7,6 +7,15 @@ commands:
           name: 'CI Setup'
           command: |
             ./dev ci-setup
+  collect-test-output:
+    steps:
+      - run:
+          name: 'Collect test artifacts'
+          when: always
+          command: |
+            ./dev collect-test-results ~/junit
+      - store_test_results:
+          path: ~/junit
 
 jobs:
   x64-test:
@@ -17,8 +26,12 @@ jobs:
       - setup
       - run:
           name: 'Run tests'
-          command: |
-            bazel test --config=dbg //...
+          command: >-
+            bazel test
+            --config=dbg
+            --test_output=errors
+            //...
+      - collect-test-output
   arm64-test:
     machine:
       image: ubuntu-2204:current
@@ -28,10 +41,15 @@ jobs:
       - setup
       - run:
           name: 'Run tests'
-          command: |
-            # We don't run with ubsan mode because of clang linking bugs:
-            # See: https://github.com/envoyproxy/envoy/issues/13973
-            bazel test --config=asan //...
+          # We don't run with ubsan mode because of clang linking bugs:
+          # See: https://github.com/envoyproxy/envoy/issues/13973
+          command: >-
+            bazel test
+            --config=asan
+            --test_output=errors
+            //...
+      - collect-test-output
+
 
 workflows:
   wasmcc:
