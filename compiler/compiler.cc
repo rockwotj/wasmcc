@@ -6,6 +6,7 @@
 #include <variant>
 
 #include "base/coro.h"
+#include "compiler/arm64/compiler.h"
 #include "compiler/common/util.h"
 #include "compiler/function.h"
 #include "compiler/x64/compiler.h"
@@ -64,7 +65,7 @@ std::unique_ptr<Compiler> Compiler::CreateNative() {
     case asmjit::Arch::kX64:
       return std::make_unique<CompilerImpl<x64::Compiler>>();
     case asmjit::Arch::kAArch64:
-      // TODO: support me
+      return std::make_unique<CompilerImpl<arm64::Compiler>>();
     default:
       // TODO: Properly crash
       __builtin_unreachable();

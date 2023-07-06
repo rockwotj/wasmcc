@@ -1,7 +1,5 @@
 #include "core/value.h"
 
-#include <bits/floatn-common.h>
-
 #include <bit>
 #include <cstdint>
 #include <exception>
