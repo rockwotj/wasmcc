@@ -18,14 +18,12 @@ namespace wasmcc::arm64 {
 constexpr size_t kDefaultStackElements = 32;
 
 TEST(RuntimeStack, EmptyIterator) {
-  RegisterTracker rt;
-  RuntimeStack s(kDefaultStackElements, &rt);
+  RuntimeStack s(kDefaultStackElements);
   EXPECT_THAT(s.ReverseIterator(), testing::IsEmpty());
 }
 
 TEST(RuntimeStack, Push) {
-  RegisterTracker rt;
-  RuntimeStack s(kDefaultStackElements, &rt);
+  RuntimeStack s(kDefaultStackElements);
   auto pushed = s.Push({.type = ValType::kI64});
   EXPECT_EQ(s.pointer(), sizeof(int64_t));
   EXPECT_EQ(pushed->stack_pointer, s.pointer());
@@ -33,8 +31,7 @@ TEST(RuntimeStack, Push) {
 }
 
 TEST(RuntimeStack, Pop) {
-  RegisterTracker rt;
-  RuntimeStack s(kDefaultStackElements, &rt);
+  RuntimeStack s(kDefaultStackElements);
   s.Push({.type = ValType::kI64});
   auto popped = s.Pop();
   EXPECT_EQ(popped.type, ValType::kI64);
