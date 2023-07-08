@@ -6,11 +6,14 @@
 #include <initializer_list>
 
 #include "compiler/common/call_convention.h"
+#include "core/value.h"
 
 namespace wasmcc::arm64 {
 using GpReg = asmjit::a64::Gp;
 using VecReg = asmjit::a64::Vec;
 constexpr GpReg kSpReg = asmjit::a64::sp;
+
+GpReg Cast(const GpReg& reg, ValType vt);
 
 // The AArch64 calling convention, it's the same on all platforms 🙌
 struct CallingConvention {
