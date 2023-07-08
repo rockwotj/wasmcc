@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "compiler/common/util.h"
+#include "compiler/x64/call_convention.h"
 #include "compiler/x64/register_tracker.h"
 #include "compiler/x64/runtime_stack.h"
 #include "core/value.h"
@@ -49,8 +50,7 @@ Compiler::Compiler(Function::Metadata meta, asmjit::CodeHolder* holder)
       _locals_stack_offset(meta.locals.size() +
                            meta.signature.parameter_types.size()),
       _reg_tracker(std::make_unique<RegisterTracker>()),
-      _stack(std::make_unique<RuntimeStack>(meta.max_stack_elements,
-                                            _reg_tracker.get())),
+      _stack(std::make_unique<RuntimeStack>(meta.max_stack_elements)),
       _meta(std::move(meta)),
       _asm(holder),
       _exit_label(_asm.newLabel()) {
@@ -106,7 +106,7 @@ Compiler::Compiler(Function::Metadata meta, asmjit::CodeHolder* holder)
   for (size_t i = 0; i < _meta.signature.parameter_types.size(); ++i) {
     ValType vt = _meta.signature.parameter_types[i];
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-    const auto& reg = Cast(RegisterTracker::kCallerSavedRegisters[i], vt);
+    const auto& reg = Cast(CallingConvention::kGpArgs[i], vt);
     auto comment = AnnotateNext("SaveLocalToStack(%d)", i);
     _asm.mov(x86::Mem(x86::regs::rsp, _locals_stack_offset[i]), reg);
   }

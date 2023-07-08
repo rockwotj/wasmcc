@@ -2,12 +2,12 @@ cc_library(
     name = "x64",
     srcs = [
         "compiler.cc",
-        "register_tracker.cc",
-        "runtime_stack.cc",
+        "call_convention.cc",
     ],
     hdrs = [
         "compiler.h",
         "register_tracker.h",
+        "call_convention.h",
         "runtime_stack.h",
     ],
     visibility = [
