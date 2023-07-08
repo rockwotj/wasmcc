@@ -6,6 +6,9 @@ cc_library(
     ],
     hdrs = [
         "exception.h",
+        "call_convention.h",
+        "register_tracker.h",
+        "runtime_stack.h",
         "util.h",
     ],
     visibility = [

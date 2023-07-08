@@ -2,11 +2,11 @@ cc_library(
     name = "arm64",
     srcs = [
         "compiler.cc",
-        "register_tracker.cc",
-        "runtime_stack.cc",
+        "call_convention.cc",
     ],
     hdrs = [
         "compiler.h",
+        "call_convention.h",
         "register_tracker.h",
         "runtime_stack.h",
     ],
