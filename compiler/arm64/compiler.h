@@ -1,8 +1,10 @@
 #pragma once
 
 #include "absl/strings/str_format.h"
+#include "compiler/arm64/call_convention.h"
 #include "compiler/arm64/register_tracker.h"
 #include "compiler/arm64/runtime_stack.h"
+#include "compiler/common/function_frame.h"
 #include "core/ast.h"
 #include "core/instruction.h"
 
@@ -48,8 +50,8 @@ class Compiler {
   void operator()(op::Return);
 
  private:
-  asmjit::a64::Gp AllocateRegister();
-  asmjit::a64::Gp EnsureInRegister(RuntimeValue*);
+  GpReg AllocateRegister();
+  GpReg EnsureInRegister(RuntimeValue*);
 
   // Annotate the next instruction emitted
   //
@@ -70,18 +72,12 @@ class Compiler {
     return msg;
   }
 
-  // The size of the locals in bytes.
-  int32_t _locals_size_bytes;
-  // A mapping between a local and it's memory offset onto the stack.
-  //
-  // The offset is relative to rsp.
-  absl::FixedArray<int32_t> _locals_stack_offset;
   std::unique_ptr<RegisterTracker> _reg_tracker;
   std::unique_ptr<RuntimeStack> _stack;
 
   Function::Metadata _meta;
+  FunctionFrame<CallingConvention> _frame;
   asmjit::a64::Assembler _asm;
-  asmjit::FuncFrame _frame;
   asmjit::Label _exit_label;
 };
 
