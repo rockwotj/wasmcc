@@ -12,6 +12,7 @@ cc_library(
         "//base:coro",
         "//compiler/common",
         "//compiler/x64",
+        "//compiler/arm64",
         "//core:ast",
         "//third_party/absl/container:flat_hash_map",
     ],
@@ -27,9 +28,5 @@ cc_test(
         "//testing:wat",
         "//parser",
         "//third_party/gtest:gtest_main",
-    ],
-    target_compatible_with = [
-      # TODO: Implement arm64 support
-      "@platforms//cpu:x86_64",
     ],
 )

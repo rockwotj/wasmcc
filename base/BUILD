@@ -3,6 +3,12 @@ package(
 )
 
 cc_library(
+    name = "align",
+    hdrs = ["align.h"],
+    srcs = ["align.cc"],
+)
+
+cc_library(
     name = "named_type",
     hdrs = ["named_type.h"],
 )
