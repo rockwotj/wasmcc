@@ -18,89 +18,28 @@ namespace x86 = asmjit::x86;
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static ThrowingErrorHandler kErrorHandler;
 
-x86::Gp Cast(const x86::Gp& reg, ValType vt) {
-  x86::Gp reg32 = reg.r32();
-  x86::Gp reg64 = reg.r64();
-  return IsValType32Bit(vt) ? reg32 : reg64;
-}
-
-asmjit::TypeId ValTypeToId(ValType vt) {
-  switch (vt) {
-    case ValType::kI32:
-      return asmjit::TypeId::kInt32;
-    case ValType::kI64:
-      return asmjit::TypeId::kInt64;
-    case ValType::kF32:
-      return asmjit::TypeId::kFloat32;
-    case ValType::kF64:
-      return asmjit::TypeId::kFloat64;
-    case ValType::kV128:
-      return asmjit::TypeId::kInt8x16;
-    case ValType::kFuncRef:
-    case ValType::kExternRef:
-      return asmjit::TypeId::kUIntPtr;
-    default:
-      __builtin_unreachable();
-  }
-}
 }  // namespace
 
 Compiler::Compiler(Function::Metadata meta, asmjit::CodeHolder* holder)
-    : _locals_size_bytes(0),  // To be calculated
-      _locals_stack_offset(meta.locals.size() +
-                           meta.signature.parameter_types.size()),
-      _reg_tracker(std::make_unique<RegisterTracker>()),
+    : _reg_tracker(std::make_unique<RegisterTracker>()),
       _stack(std::make_unique<RuntimeStack>(meta.max_stack_elements)),
       _meta(std::move(meta)),
       _asm(holder),
+      _frame(_meta),
       _exit_label(_asm.newLabel()) {
 #ifndef NDEBUG
   _asm.addDiagnosticOptions(asmjit::DiagnosticOptions::kValidateAssembler);
 #endif
   _asm.setErrorHandler(&kErrorHandler);
+}
 
-  // Initially record the stack offset relative to the bottom of the stack
-  size_t i = 0;
-  for (const auto& type : _meta.signature.parameter_types) {
-    _locals_stack_offset[i++] = _locals_size_bytes;
-    _locals_size_bytes += int32_t(ValTypeSizeBytes(type));
-  }
-  for (const auto& type : _meta.locals) {
-    _locals_stack_offset[i++] = _locals_size_bytes;
-    _locals_size_bytes += int32_t(ValTypeSizeBytes(type));
-  }
-  // Now that we've calculated the full stack size, adjust the offset to be
-  // relative to the top of the stack.
-  for (i = 0; i < _locals_stack_offset.size(); ++i) {
-    _locals_stack_offset[i] -=
-        _locals_size_bytes + int32_t(_meta.max_stack_size_bytes);
-  }
-  // NOTE: This only supports upto 16 arguments.
-  asmjit::FuncSignatureBuilder b;
-  for (ValType vt : _meta.signature.parameter_types) {
-    b.addArg(ValTypeToId(vt));
-  }
-  switch (_meta.signature.result_types.size()) {
-    case 0:
-      b.setRet(asmjit::TypeId::kVoid);
-      break;
-    case 1:
-      b.addArg(ValTypeToId(_meta.signature.result_types.front()));
-    default:
-      // A pointer to a structure of result values
-      b.setRet(asmjit::TypeId::kUIntPtr);
-      break;
-  }
-  asmjit::FuncDetail func_detail;
-  Check(func_detail.init(b, _asm.environment()));
-  Check(_frame.init(func_detail));
-  // TODO: There are cases where it makes sense to save some caller registers:
-  // _frame.setAllDirty(asmjit::RegGroup::kGp);
-  Check(_frame.finalize());
-  _asm.emitProlog(_frame);
+void Compiler::SetLogger(asmjit::Logger* logger) { _asm.setLogger(logger); }
+void Compiler::AnnotateNext(const char* s) { _asm.setInlineComment(s); }
+
+void Compiler::Prologue() {
   AnnotateNext("set locals stack space");
   // rsp -= <stack_size>
-  _asm.sub(x86::regs::rsp, _meta.max_stack_size_bytes + _locals_size_bytes);
+  _asm.sub(x86::regs::rsp, _frame.StackSizeBytes());
   // TODO: We should lazily spill these onto the stack, and handle passing
   // values by stack
   for (size_t i = 0; i < _meta.signature.parameter_types.size(); ++i) {
@@ -108,14 +47,9 @@ Compiler::Compiler(Function::Metadata meta, asmjit::CodeHolder* holder)
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
     const auto& reg = Cast(CallingConvention::kGpArgs[i], vt);
     auto comment = AnnotateNext("SaveLocalToStack(%d)", i);
-    _asm.mov(x86::Mem(x86::regs::rsp, _locals_stack_offset[i]), reg);
+    _asm.mov(x86::Mem(x86::regs::rsp, _frame.LocalStackOffset(i)), reg);
   }
 }
-
-void Compiler::SetLogger(asmjit::Logger* logger) { _asm.setLogger(logger); }
-void Compiler::AnnotateNext(const char* s) { _asm.setInlineComment(s); }
-
-void Compiler::Prologue() {}
 void Compiler::Epilogue() {
   AnnotateNext("epilog start");
   _asm.bind(_exit_label);
@@ -130,8 +64,8 @@ void Compiler::Epilogue() {
     }
   }
   // rsp += <stack size>
-  _asm.add(x86::regs::rsp, _meta.max_stack_size_bytes + _locals_size_bytes);
-  _asm.emitEpilog(_frame);
+  _asm.add(x86::regs::rsp, _frame.StackSizeBytes());
+  _asm.ret();
 }
 
 void Compiler::operator()(op::ConstI32 op) {
@@ -156,22 +90,22 @@ void Compiler::operator()(op::GetLocalI32 op) {
   _stack->Push({.type = ValType::kI32});
   auto* top = _stack->Peek();
   top->reg = AllocateRegister();
-  auto offset = _locals_stack_offset[op.idx];
+  auto offset = _frame.LocalStackOffset(op.idx);
   auto comment = AnnotateNext("GetLocalI32(%d)", op.idx);
   _asm.mov(top->reg->r32(), x86::Mem(x86::rsp, offset));
 }
 void Compiler::operator()(op::SetLocalI32 op) {
   auto v = _stack->Pop();
   auto v_reg = EnsureInRegister(&v);
-  auto offset = _locals_stack_offset[op.idx];
+  auto offset = _frame.LocalStackOffset(op.idx);
   auto comment = AnnotateNext("SetLocalI32(%d)", op.idx);
   _asm.mov(x86::Mem(x86::rsp, offset), v_reg);
   _reg_tracker->MarkRegisterUnused(v_reg);
 }
 void Compiler::operator()(op::Return) { _asm.jmp(_exit_label); }
 
-x86::Gp Compiler::AllocateRegister() {
-  std::optional<x86::Gp> reg = _reg_tracker->TakeUnusedRegister();
+GpReg Compiler::AllocateRegister() {
+  std::optional<GpReg> reg = _reg_tracker->TakeUnusedRegister();
   if (reg) {
     return *reg;
   }
@@ -189,7 +123,7 @@ x86::Gp Compiler::AllocateRegister() {
   return *reg;
 }
 
-x86::Gp Compiler::EnsureInRegister(RuntimeValue* v) {
+GpReg Compiler::EnsureInRegister(RuntimeValue* v) {
   if (!v->reg) {
     v->reg = AllocateRegister();
     AnnotateNext("load from stack");
