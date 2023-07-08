@@ -5,11 +5,15 @@
 #include <array>
 
 #include "compiler/common/call_convention.h"
+#include "core/value.h"
 
 namespace wasmcc::x64 {
 using GpReg = asmjit::x86::Gp;
 using VecReg = asmjit::x86::Vec;
 static constexpr GpReg kSpReg = asmjit::x86::rsp;
+
+GpReg Cast(const GpReg& reg, ValType vt);
+
 // The SystemV calling convention, which is used on Mac + Linux.
 struct CallingConvention {
   using GpReg = GpReg;
