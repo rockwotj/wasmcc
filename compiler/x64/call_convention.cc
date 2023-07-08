@@ -2,6 +2,11 @@
 
 namespace wasmcc::x64 {
 
+GpReg Cast(const GpReg& reg, ValType vt) {
+  GpReg reg32 = reg.r32();
+  GpReg reg64 = reg.r64();
+  return IsValType32Bit(vt) ? reg32 : reg64;
+}
 const RegisterMask<GpReg> CallingConvention::kGpCalleeSavedRegisters({
     asmjit::x86::rbx,
     asmjit::x86::rbp,

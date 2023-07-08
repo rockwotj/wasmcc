@@ -22,6 +22,8 @@ class CompilerImpl : public Compiler {
 
   co::Future<CompiledFunction> Compile(Function func) override {
     T func_compiler(func.meta, &_code_holder);
+    asmjit::StringLogger logger;
+    func_compiler.SetLogger(&logger);
     func_compiler.Prologue();
     for (const auto& expr : func.body) {
       std::visit(func_compiler, expr);
@@ -30,6 +32,7 @@ class CompilerImpl : public Compiler {
     func_compiler.Epilogue();
     void* compiled = nullptr;
     Check(_runtime.add(&compiled, &_code_holder));
+    std::cout << logger.data() << std::endl;
     co_return CompiledFunction(compiled);
   }
 
