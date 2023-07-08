@@ -6,6 +6,7 @@
 #include <memory>
 
 #include "base/align.h"
+#include "compiler/arm64/call_convention.h"
 #include "compiler/arm64/register_tracker.h"
 #include "compiler/arm64/runtime_stack.h"
 #include "compiler/common/util.h"
@@ -50,8 +51,7 @@ Compiler::Compiler(Function::Metadata meta, asmjit::CodeHolder* holder)
       _locals_stack_offset(meta.locals.size() +
                            meta.signature.parameter_types.size()),
       _reg_tracker(std::make_unique<RegisterTracker>()),
-      _stack(std::make_unique<RuntimeStack>(meta.max_stack_elements,
-                                            _reg_tracker.get())),
+      _stack(std::make_unique<RuntimeStack>(meta.max_stack_elements)),
       _meta(std::move(meta)),
       _asm(holder),
       _exit_label(_asm.newLabel()) {
@@ -103,13 +103,13 @@ Compiler::Compiler(Function::Metadata meta, asmjit::CodeHolder* holder)
   // rsp -= <stack_size>
   _asm.sub(a64::sp, a64::sp,
            AlignUp(_meta.max_stack_size_bytes + _locals_size_bytes,
-                   _asm.environment().stackAlignment()));
+                   CallingConvention::kStackAlignment));
   // TODO: We should lazily spill these onto the stack, and handle passing
   // values by stack
   for (size_t i = 0; i < _meta.signature.parameter_types.size(); ++i) {
     ValType vt = _meta.signature.parameter_types[i];
     // NOLINTNEXTLINE(cppcoreguidelines-pro-bounds-constant-array-index)
-    const auto& reg = Cast(RegisterTracker::kCallerSavedRegisters[i], vt);
+    const auto& reg = Cast(CallingConvention::kGpArgs[i], vt);
     auto comment = AnnotateNext("SaveLocalToStack(%d)", i);
     _asm.str(reg, a64::Mem(a64::regs::sp, _locals_stack_offset[i]));
   }
@@ -135,7 +135,7 @@ void Compiler::Epilogue() {
   // rsp += <stack size>
   _asm.add(a64::sp, a64::sp,
            AlignUp(_meta.max_stack_size_bytes + _locals_size_bytes,
-                   _asm.environment().stackAlignment()));
+                   CallingConvention::kStackAlignment));
   _asm.emitEpilog(_frame);
 }
 
