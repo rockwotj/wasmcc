@@ -3,6 +3,14 @@ package(
 )
 
 cc_library(
+    name = "assert",
+    hdrs = ["assert.h"],
+    deps = [
+      "//third_party/absl/strings:str_format",
+    ],
+)
+
+cc_library(
     name = "align",
     hdrs = ["align.h"],
 )
