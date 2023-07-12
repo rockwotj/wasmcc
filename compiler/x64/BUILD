@@ -1,13 +1,13 @@
 cc_library(
     name = "x64",
     srcs = [
-        "compiler.cc",
         "call_convention.cc",
+        "compiler.cc",
     ],
     hdrs = [
+        "call_convention.h",
         "compiler.h",
         "register_tracker.h",
-        "call_convention.h",
         "runtime_stack.h",
     ],
     visibility = [
@@ -25,6 +25,7 @@ cc_library(
 
 cc_test(
     name = "register_tracker_test",
+    size = "small",
     srcs = [
         "register_tracker_test.cc",
     ],
@@ -37,6 +38,7 @@ cc_test(
 
 cc_test(
     name = "runtime_stack_test",
+    size = "small",
     srcs = [
         "runtime_stack_test.cc",
     ],

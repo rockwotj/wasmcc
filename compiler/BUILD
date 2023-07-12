@@ -10,9 +10,9 @@ cc_library(
     ],
     deps = [
         "//base:coro",
+        "//compiler/arm64",
         "//compiler/common",
         "//compiler/x64",
-        "//compiler/arm64",
         "//core:ast",
         "//third_party/absl/container:flat_hash_map",
     ],
@@ -25,8 +25,8 @@ cc_test(
     deps = [
         ":compiler",
         "//base:stream",
-        "//testing:wat",
         "//parser",
+        "//testing:wat",
         "//third_party/gtest:gtest_main",
     ],
 )

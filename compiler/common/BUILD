@@ -5,11 +5,11 @@ cc_library(
         "util.cc",
     ],
     hdrs = [
-        "exception.h",
         "call_convention.h",
+        "exception.h",
+        "function_frame.h",
         "register_tracker.h",
         "runtime_stack.h",
-        "function_frame.h",
         "util.h",
     ],
     visibility = [

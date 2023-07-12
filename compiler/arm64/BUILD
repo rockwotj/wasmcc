@@ -1,12 +1,12 @@
 cc_library(
     name = "arm64",
     srcs = [
-        "compiler.cc",
         "call_convention.cc",
+        "compiler.cc",
     ],
     hdrs = [
-        "compiler.h",
         "call_convention.h",
+        "compiler.h",
         "register_tracker.h",
         "runtime_stack.h",
     ],
@@ -14,9 +14,9 @@ cc_library(
         "//compiler:__pkg__",
     ],
     deps = [
+        "//base:align",
         "//compiler/common",
         "//core:ast",
-        "//base:align",
         "//core:value",
         "//third_party/absl/container:fixed_array",
         "//third_party/absl/strings:str_format",
@@ -26,6 +26,7 @@ cc_library(
 
 cc_test(
     name = "register_tracker_test",
+    size = "small",
     srcs = [
         "register_tracker_test.cc",
     ],
@@ -38,6 +39,7 @@ cc_test(
 
 cc_test(
     name = "runtime_stack_test",
+    size = "small",
     srcs = [
         "runtime_stack_test.cc",
     ],

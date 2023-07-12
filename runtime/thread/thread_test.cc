@@ -25,14 +25,18 @@ TEST(VMThread, Works) {
         }
       },
       kConfig);
+  EXPECT_EQ(thread->state(), VMThread::State::kStopped);
   for (int i = 0; i < 4; ++i) {
     EXPECT_EQ(invoke_count, i);
     thread->Resume();
+    EXPECT_EQ(thread->state(), VMThread::State::kSuspended);
   }
   EXPECT_EQ(invoke_count, 4);
+  EXPECT_EQ(thread->state(), VMThread::State::kSuspended);
   running = false;
   thread->Resume();
   EXPECT_EQ(invoke_count, 4);
+  EXPECT_EQ(thread->state(), VMThread::State::kStopped);
 }
 
 TEST(VMThread, CanBeStartedAfterStop) {
@@ -41,6 +45,7 @@ TEST(VMThread, CanBeStartedAfterStop) {
   for (int i = 0; i < 4; ++i) {
     EXPECT_EQ(invoke_count, i);
     thread->Resume();
+    EXPECT_EQ(thread->state(), VMThread::State::kStopped);
   }
   EXPECT_EQ(invoke_count, 4);
 }
