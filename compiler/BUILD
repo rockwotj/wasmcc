@@ -1,12 +1,28 @@
+package(
+  default_visibility = ["//visibility:public"],
+)
+
+cc_library(
+  name = "module",
+    srcs = [
+        "module.cc",
+    ],
+    hdrs = [
+        "module.h",
+    ],
+    deps = [
+        "//core:ast",
+        "//third_party/absl/container:flat_hash_map",
+    ],
+)
+
 cc_library(
     name = "compiler",
     srcs = [
         "compiler.cc",
-        "function.cc",
     ],
     hdrs = [
         "compiler.h",
-        "function.h",
     ],
     deps = [
         "//base:coro",
@@ -15,7 +31,7 @@ cc_library(
         "//compiler/common",
         "//compiler/x64",
         "//core:ast",
-        "//third_party/absl/container:flat_hash_map",
+        ":module",
     ],
 )
 
