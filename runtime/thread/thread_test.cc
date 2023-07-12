@@ -50,4 +50,32 @@ TEST(VMThread, CanBeStartedAfterStop) {
   EXPECT_EQ(invoke_count, 4);
 }
 
+TEST(VMThread, CanBeStoppedWhileSuspended) {
+  int value = -1;
+  auto thread = VMThread::Create(
+      [&value] {
+        for (int i = 0; i < 4; ++i) {
+          value = i;
+          VMThread::Yield();
+        }
+      },
+      kConfig);
+  EXPECT_EQ(value, -1);
+  EXPECT_EQ(thread->state(), VMThread::State::kStopped);
+  thread->Resume();
+  EXPECT_EQ(value, 0);
+  EXPECT_EQ(thread->state(), VMThread::State::kSuspended);
+  thread->Resume();
+  EXPECT_EQ(value, 1);
+  EXPECT_EQ(thread->state(), VMThread::State::kSuspended);
+  thread->Resume();
+  EXPECT_EQ(value, 2);
+  EXPECT_EQ(thread->state(), VMThread::State::kSuspended);
+  thread->Stop();
+  EXPECT_EQ(thread->state(), VMThread::State::kStopped);
+  thread->Resume();
+  EXPECT_EQ(value, 0);
+  EXPECT_EQ(thread->state(), VMThread::State::kSuspended);
+}
+
 }  // namespace wasmcc::runtime
