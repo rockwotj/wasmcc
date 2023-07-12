@@ -35,18 +35,6 @@ class Compiler {
   virtual co::Future<CompiledModule> Compile(ParsedModule) = 0;
 
   /**
-   * Compile a parsed function into machine code for a target architecture.
-   *
-   * NOTE: A compiled function's lifetime is currently managed by the compiler
-   * that created it, but the memory management may change in the future.
-   */
-  virtual co::Future<CompiledFunction> Compile(Function) = 0;
-
-  /**
-   * Free the memory associated with a compiled function.
-   */
-  virtual void Release(CompiledFunction) = 0;
-  /**
    * Free the memory associated with all compiled functions in a module.
    */
   virtual co::Future<> Release(CompiledModule) = 0;

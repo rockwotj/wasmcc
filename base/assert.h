@@ -19,13 +19,19 @@ struct AssertCondition {
 }  // namespace detail
 
 template <typename... Args>
+[[noreturn]] void Abort(const std::source_location src,
+                        const absl::FormatSpec<Args...>& fmt, Args... args) {
+  std::cerr << src.file_name() << ":" << src.line()
+            << "Assertion failed: " << absl::StrFormat(fmt, args...)
+            << std::endl;
+  __builtin_trap();
+}
+
+template <typename... Args>
 void Assert(detail::AssertCondition cond, const absl::FormatSpec<Args...>& fmt,
             Args... args) {
   if (!cond.value) [[unlikely]] {
-    std::cerr << cond.src.file_name() << ":" << cond.src.line()
-              << "Assertion failed: " << absl::StrFormat(fmt, args...)
-              << std::endl;
-    __builtin_trap();
+    Abort(cond.src, fmt, args...);
   }
 }
 
