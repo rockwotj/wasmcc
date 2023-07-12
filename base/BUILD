@@ -6,7 +6,7 @@ cc_library(
     name = "assert",
     hdrs = ["assert.h"],
     deps = [
-      "//third_party/absl/strings:str_format",
+        "//third_party/absl/strings:str_format",
     ],
 )
 

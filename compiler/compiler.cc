@@ -3,8 +3,10 @@
 #include <asmjit/asmjit.h>
 
 #include <memory>
+#include <source_location>
 #include <variant>
 
+#include "base/assert.h"
 #include "base/coro.h"
 #include "compiler/arm64/compiler.h"
 #include "compiler/common/util.h"
@@ -20,7 +22,7 @@ class CompilerImpl : public Compiler {
     Check(_code_holder.init(_runtime.environment(), _runtime.cpuFeatures()));
   };
 
-  co::Future<CompiledFunction> Compile(Function func) override {
+  co::Future<CompiledFunction> Compile(Function func) {
     T func_compiler(func.meta, &_code_holder);
     asmjit::StringLogger logger;
     func_compiler.SetLogger(&logger);
@@ -45,9 +47,7 @@ class CompilerImpl : public Compiler {
     co_return std::move(compiled);
   }
 
-  void Release(CompiledFunction compiled) override {
-    _runtime.release(compiled.get());
-  }
+  void Release(CompiledFunction compiled) { _runtime.release(compiled.get()); }
 
   co::Future<> Release(CompiledModule compiled) override {
     for (const auto& func : compiled.functions) {
@@ -64,15 +64,54 @@ class CompilerImpl : public Compiler {
 
 std::unique_ptr<Compiler> Compiler::CreateNative() {
   auto env = asmjit::Environment::host();
+  std::string_view unsupported_arch;
   switch (env.arch()) {
     case asmjit::Arch::kX64:
       return std::make_unique<CompilerImpl<x64::Compiler>>();
     case asmjit::Arch::kAArch64:
       return std::make_unique<CompilerImpl<arm64::Compiler>>();
-    default:
-      // TODO: Properly crash
-      __builtin_unreachable();
+    case asmjit::Arch::kX86:
+      unsupported_arch = "x86";
+      break;
+    case asmjit::Arch::kRISCV32:
+      unsupported_arch = "riscv_32";
+      break;
+    case asmjit::Arch::kRISCV64:
+      unsupported_arch = "riscv_64";
+      break;
+    case asmjit::Arch::kARM:
+      unsupported_arch = "arm";
+      break;
+    case asmjit::Arch::kThumb:
+      unsupported_arch = "thumb";
+      break;
+    case asmjit::Arch::kMIPS32_LE:
+      unsupported_arch = "mips32_le";
+      break;
+    case asmjit::Arch::kMIPS64_LE:
+      unsupported_arch = "mips64_le";
+      break;
+    case asmjit::Arch::kARM_BE:
+      unsupported_arch = "arm_be";
+      break;
+    case asmjit::Arch::kAArch64_BE:
+      unsupported_arch = "aarch64_be";
+      break;
+    case asmjit::Arch::kThumb_BE:
+      unsupported_arch = "thumb_be";
+      break;
+    case asmjit::Arch::kMIPS32_BE:
+      unsupported_arch = "mips32_be";
+      break;
+    case asmjit::Arch::kMIPS64_BE:
+      unsupported_arch = "mips64_be";
+      break;
+    case asmjit::Arch::kUnknown:
+      unsupported_arch = "unknown";
+      break;
   }
+  Abort(std::source_location::current(), "unsupported architecture: %s",
+        unsupported_arch);
 }
 
 }  // namespace wasmcc
