@@ -21,6 +21,7 @@ jobs:
   x64-test:
     docker:
       - image: fedora:38
+    resource_class: large
     steps:
       - checkout
       - setup
@@ -33,9 +34,9 @@ jobs:
             //...
       - collect-test-output
   arm64-test:
-    machine:
-      image: ubuntu-2204:current
-    resource_class: arm.medium
+    docker:
+      - image: fedora:38
+    resource_class: arm.large
     steps:
       - checkout
       - setup
