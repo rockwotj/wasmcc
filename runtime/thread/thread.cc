@@ -11,6 +11,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include "absl/functional/any_invocable.h"
 #include "base/align.h"
 #include "base/assert.h"
 
@@ -60,7 +61,7 @@ void VMThreadStart(VMThread* thread) {
   thread->TrampolineOutOfVM();
 }
 
-std::unique_ptr<VMThread> VMThread::Create(std::function<void()> func,
+std::unique_ptr<VMThread> VMThread::Create(absl::AnyInvocable<void()> func,
                                            VMThreadConfiguration config) {
   size_t aligned_stack_size = 0;
   StackMemory stack_mem = {nullptr, std::free};
@@ -97,7 +98,7 @@ std::unique_ptr<VMThread> VMThread::Create(std::function<void()> func,
       new VMThread(std::move(func), std::move(stack_mem), aligned_stack_size));
 }
 
-VMThread::VMThread(std::function<void()> func, StackMemory stack_mem,
+VMThread::VMThread(absl::AnyInvocable<void()> func, StackMemory stack_mem,
                    size_t stack_size)
     : _func(std::move(func)),
       _stack_memory(std::move(stack_mem)),
@@ -121,6 +122,13 @@ void VMThread::Resume() {
   }
   _state = State::kRunning;
   TrampolineInToVM();
+}
+void VMThread::Stop() {
+  if (_state == State::kRunning) {
+    throw std::runtime_error("attempting to stop a running VMThread");
+  }
+  // The next time we Resume, we'll reset the stack state to the initial state.
+  _state = State::kStopped;
 }
 void VMThread::Yield() {
   if (current_vm_thread == nullptr) {
