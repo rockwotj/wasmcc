@@ -2,7 +2,7 @@
 #include <random>
 
 #include "base/coro.h"
-#include "compiler/function.h"
+#include "compiler/module.h"
 #include "core/ast.h"
 
 #pragma once

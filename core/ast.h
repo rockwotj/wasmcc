@@ -15,6 +15,9 @@ namespace wasmcc {
 struct FunctionSignature {
   std::vector<ValType> parameter_types;
   std::vector<ValType> result_types;
+
+  friend bool operator==(const FunctionSignature&,
+                         const FunctionSignature&) = default;
 };
 
 struct Limits {
