@@ -10,7 +10,7 @@
 #include "base/coro.h"
 #include "compiler/arm64/compiler.h"
 #include "compiler/common/util.h"
-#include "compiler/function.h"
+#include "compiler/module.h"
 #include "compiler/x64/compiler.h"
 
 namespace wasmcc {
@@ -35,7 +35,7 @@ class CompilerImpl : public Compiler {
     void* compiled = nullptr;
     Check(_runtime.add(&compiled, &_code_holder));
     std::cout << logger.data() << std::endl;
-    co_return CompiledFunction(compiled);
+    co_return CompiledFunction(compiled, std::move(func.meta));
   }
 
   co::Future<CompiledModule> Compile(ParsedModule parsed) override {
@@ -47,7 +47,9 @@ class CompilerImpl : public Compiler {
     co_return std::move(compiled);
   }
 
-  void Release(CompiledFunction compiled) { _runtime.release(compiled.get()); }
+  void Release(const CompiledFunction& compiled) {
+    _runtime.release(compiled.get());
+  }
 
   co::Future<> Release(CompiledModule compiled) override {
     for (const auto& func : compiled.functions) {
