@@ -35,7 +35,7 @@ jobs:
       - collect-test-output
   arm64-test:
     docker:
-      image: fedora:38
+      - image: fedora:38
     resource_class: arm.large
     steps:
       - checkout

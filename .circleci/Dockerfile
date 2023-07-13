@@ -1,9 +1,5 @@
 FROM fedora:38
 
-LABEL org.opencontainers.image.source=https://github.com/rockwotj/wasmcc
-LABEL org.opencontainers.image.description="CI Container Image"
-LABEL org.opencontainers.image.licenses=Apache-2.0
-
 ARG TARGETOS
 ARG TARGETARCH
 
