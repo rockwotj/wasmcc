@@ -1,12 +1,6 @@
 version: 2.1
 
 commands:
-  setup:
-    steps:
-      - run:
-          name: 'CI Setup'
-          command: |
-            ./dev ci-setup
   collect-test-output:
     steps:
       - run:
@@ -24,7 +18,6 @@ jobs:
     resource_class: large
     steps:
       - checkout
-      - setup
       - run:
           name: 'Run tests'
           command: >-
@@ -39,14 +32,11 @@ jobs:
     resource_class: arm.large
     steps:
       - checkout
-      - setup
       - run:
           name: 'Run tests'
-          # We don't run with ubsan mode because of clang linking bugs:
-          # See: https://github.com/envoyproxy/envoy/issues/13973
           command: >-
             bazel test
-            --config=asan
+            --config=dbg
             --test_output=errors
             //...
       - collect-test-output
