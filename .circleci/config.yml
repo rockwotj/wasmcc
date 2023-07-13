@@ -20,7 +20,7 @@ commands:
 jobs:
   x64-test:
     docker:
-      - image: rockwotj/wasmcc-ci:latest
+      - image: rockwotj/wasmcc-ci:pr16
     resource_class: large
     steps:
       - checkout
@@ -35,7 +35,7 @@ jobs:
       - collect-test-output
   arm64-test:
     docker:
-      - image: rockwotj/wasmcc-ci:latest
+      - image: rockwotj/wasmcc-ci:pr16
     resource_class: arm.large
     steps:
       - checkout
