@@ -1,21 +1,25 @@
-#include "compiler/compiler.h"
+#include "runtime/vm.h"
 
 #include <gtest/gtest.h>
 
+#include <cstddef>
+
 #include "base/stream.h"
-#include "compiler/module.h"
+#include "compiler/compiler.h"
 #include "parser/parser.h"
 #include "testing/wat.h"
 
 namespace wasmcc {
+
 namespace {
 
-class CompilerTest : public ::testing::Test {
+class VMTest : public ::testing::Test {
  public:
-  CompiledModule Compile(std::string_view wat) {
+  std::unique_ptr<VM> CreateVM(std::string_view wat) {
     auto source = ByteStream(Wat2Wasm(wat));
     auto parsed = ParseModule(&source).get();
-    return _compiler->Compile(parsed).get();
+    auto compiled = _compiler->Compile(parsed).get();
+    return VM::Create(std::move(compiled));
   }
 
  private:
@@ -23,18 +27,18 @@ class CompilerTest : public ::testing::Test {
 };
 }  // namespace
 
-TEST_F(CompilerTest, CanGenerateAddFn) {
-  auto compiled = Compile(R"WAT(
+TEST_F(VMTest, Works) {
+  auto vm = CreateVM(R"WAT(
   (module
     (func $add (param $lhs i32) (param $rhs i32) (result i32)
       local.get $lhs
       local.get $rhs
       i32.add) (export "add" (func $add)))
   )WAT");
-  auto func_idx = compiled.exported_functions[Name("add")];
-  auto add = compiled.functions[func_idx.value()];
-  auto result = add.invoke<int32_t, int32_t, int32_t>(1, 2);
-  EXPECT_EQ(result, 3);
+  auto func = vm->LookupFunctionHandle<int (*)(int, int)>(Name("add"));
+  ASSERT_NE(func, std::nullopt);
+  // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
+  EXPECT_EQ(func->invoke(3, 4), 7);
 }
 
 }  // namespace wasmcc
