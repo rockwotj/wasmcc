@@ -20,7 +20,7 @@ commands:
 jobs:
   x64-test:
     docker:
-      - image: fedora:38
+      - image: ghcr.io/rockwotj/wasmcc-ci:latest
     resource_class: large
     steps:
       - checkout
@@ -35,7 +35,7 @@ jobs:
       - collect-test-output
   arm64-test:
     docker:
-      - image: fedora:38
+      - image: ghcr.io/rockwotj/wasmcc-ci:latest
     resource_class: arm.large
     steps:
       - checkout
