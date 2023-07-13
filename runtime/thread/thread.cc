@@ -122,6 +122,13 @@ void VMThread::Resume() {
   _state = State::kRunning;
   TrampolineInToVM();
 }
+void VMThread::Stop() {
+  if (_state == State::kRunning) {
+    throw std::runtime_error("attempting to stop a running VMThread");
+  }
+  // The next time we Resume, we'll reset the stack state to the initial state.
+  _state = State::kStopped;
+}
 void VMThread::Yield() {
   if (current_vm_thread == nullptr) {
     throw std::runtime_error("attempting to yield when there is no VMThread");

@@ -57,6 +57,14 @@ class VMThread {
    */
   void Resume();
 
+  /**
+   * Move a thread in the suspended state into the stopped state.
+   *
+   * This allows for "resetting" a thread back to the entry point if it's
+   * suspended.
+   */
+  void Stop();
+
   /** Pause the currently running VMThread. */
   static void Yield();
 

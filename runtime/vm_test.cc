@@ -12,7 +12,6 @@
 namespace wasmcc {
 
 namespace {
-
 class VMTest : public ::testing::Test {
  public:
   std::unique_ptr<VM> CreateVM(std::string_view wat) {
@@ -38,7 +37,7 @@ TEST_F(VMTest, Works) {
   auto func = vm->LookupFunctionHandle<int (*)(int, int)>(Name("add"));
   ASSERT_NE(func, std::nullopt);
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  EXPECT_EQ(func->invoke(3, 4), 7);
+  EXPECT_EQ(func->invoke(1, 1), 2);
 }
 
 }  // namespace wasmcc
