@@ -3,6 +3,8 @@
 #include <functional>
 #include <memory>
 
+#include "absl/functional/any_invocable.h"
+
 namespace wasmcc::runtime {
 struct ThreadStack;
 using StackState = std::unique_ptr<ThreadStack, void (*)(ThreadStack*)>;
@@ -49,13 +51,21 @@ class VMThread {
    * Create a new thread running the specified function with a stack the size of
    * `stack_size`.
    */
-  static std::unique_ptr<VMThread> Create(std::function<void()>,
+  static std::unique_ptr<VMThread> Create(absl::AnyInvocable<void()>,
                                           VMThreadConfiguration);
 
   /**
    * Resume (or start) the thread.
    */
   void Resume();
+
+  /**
+   * Move a thread in the suspended state into the stopped state.
+   *
+   * This allows for "resetting" a thread back to the entry point if it's
+   * suspended.
+   */
+  void Stop();
 
   /** Pause the currently running VMThread. */
   static void Yield();
@@ -75,15 +85,15 @@ class VMThread {
  private:
   friend void VMThreadStart(VMThread*);
 
-  using StackMemory = std::unique_ptr<void, std::function<void(void*)>>;
+  using StackMemory = std::unique_ptr<void, absl::AnyInvocable<void(void*)>>;
 
-  VMThread(std::function<void()>, StackMemory, size_t);
+  VMThread(absl::AnyInvocable<void()>, StackMemory, size_t);
 
   void TrampolineInToVM();
   void TrampolineOutOfVM();
 
   State _state = State::kStopped;
-  std::function<void()> _func;
+  absl::AnyInvocable<void()> _func;
 
   StackMemory _stack_memory;
   size_t _stack_size;
