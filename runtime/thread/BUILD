@@ -14,6 +14,7 @@ cc_library(
     ],
     deps = [
         "//base:align",
+        "//third_party/absl/functional:any_invocable",
         "//base:assert",
     ],
 )
