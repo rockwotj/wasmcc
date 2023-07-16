@@ -1,5 +1,7 @@
 #pragma once
 
+#include "absl/functional/any_invocable.h"
+#include "base/type_traits.h"
 #include "compiler/module.h"
 #include "core/ast.h"
 #include "runtime/function_handle.h"
@@ -49,6 +51,16 @@ class VM {
    */
   virtual std::optional<CompiledFunction> LookupFunctionHandleDynamic(
       const Name&, const FunctionSignature&) = 0;
+
+  /**
+   * Run the specified compiled function within the VM's thread and stack.
+   *
+   * Only one live DynamicComputation is allowed at once.
+   *
+   * NOTE: The VM **must** outlive the resuling computation.
+   */
+  virtual runtime::DynamicComputation InvokeDynamic(
+      absl::AnyInvocable<void()>) = 0;
 };
 
 template <typename Signature>
@@ -59,7 +71,21 @@ std::optional<FunctionHandle<Signature>> VM::LookupFunctionHandle(
   if (!compiled) {
     return std::nullopt;
   }
-  return FunctionHandle<Signature>(std::move(compiled).value());
+  using ArgTypes = FunctionTraits<Signature>::arg_types;
+  using ResultType = FunctionTraits<Signature>::result_type;
+  return FunctionHandle<Signature>(
+      [this, compiled = std::move(compiled).value()](ArgTypes&& args) {
+        std::unique_ptr<Computation<ResultType>> typed_computation{
+            new Computation<ResultType>()};
+        typed_computation->_dyn = InvokeDynamic(
+            [compiled = compiled, args = std::forward<ArgTypes>(args),
+             comp = typed_computation.get()]() mutable {
+              comp->_result =
+                  compiled.template apply<Signature, ArgTypes>(std::move(args));
+            });
+
+        return std::move(typed_computation);
+      });
 }
 
 }  // namespace wasmcc
