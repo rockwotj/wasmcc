@@ -37,7 +37,11 @@ TEST_F(VMTest, Works) {
   auto func = vm->LookupFunctionHandle<int (*)(int, int)>(Name("add"));
   ASSERT_NE(func, std::nullopt);
   // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
-  EXPECT_EQ(func->invoke(1, 1), 2);
+  auto computation = func->Invoke(1, 1);
+  while (!computation->IsDone()) {
+    computation->Execute();
+  }
+  EXPECT_EQ(computation->GetResult(), 2);
 }
 
 }  // namespace wasmcc

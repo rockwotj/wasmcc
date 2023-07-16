@@ -1,6 +1,6 @@
 cc_library(
   name = "runtime",
-  srcs = ["vm.cc"],
+  srcs = ["vm.cc", "function_handle.cc"],
   hdrs = [
     "vm.h",
     "function_handle.h",
@@ -10,6 +10,7 @@ cc_library(
     "//compiler:module",
     "//core:ast",
     "//base:type_traits",
+    "//third_party/absl/functional:any_invocable",
     "//runtime/thread",
   ],
 )
