@@ -36,19 +36,16 @@ TEST(ByteStream, ReadMany) {
   bytes buf(2, 0);
   EXPECT_EQ(stream.BytesConsumed(), 0);
   EXPECT_TRUE(stream.HasRemaining());
-  EXPECT_EQ(stream.ReadBytes(buf), 2);
-  EXPECT_EQ(buf, bytes({0x04, 0x03}));
+  EXPECT_EQ(stream.ReadBytes(2), bytes({0x04, 0x03}));
   EXPECT_EQ(stream.BytesConsumed(), 2);
   EXPECT_TRUE(stream.HasRemaining());
-  EXPECT_EQ(stream.ReadBytes(buf), 2);
-  EXPECT_EQ(buf, bytes({0x02, 0x01}));
+  EXPECT_EQ(stream.ReadBytes(2), bytes({0x02, 0x01}));
   EXPECT_EQ(stream.BytesConsumed(), 4);
   EXPECT_TRUE(stream.HasRemaining());
-  EXPECT_EQ(stream.ReadBytes(buf), 1);
-  EXPECT_EQ(buf[0], 0x00);
+  EXPECT_EQ(stream.ReadBytes(1), bytes({0x00}));
   EXPECT_EQ(stream.BytesConsumed(), 5);
   EXPECT_FALSE(stream.HasRemaining());
-  EXPECT_EQ(stream.ReadBytes(buf), 0);
+  EXPECT_THROW(stream.ReadBytes(2), EndOfStreamException);
   EXPECT_EQ(stream.BytesConsumed(), 5);
   EXPECT_FALSE(stream.HasRemaining());
   EXPECT_THROW(stream.ReadByte(), EndOfStreamException);
@@ -64,16 +61,18 @@ TEST(ByteStream, Skip) {
   });
   EXPECT_TRUE(stream.HasRemaining());
   EXPECT_EQ(stream.BytesConsumed(), 0);
-  EXPECT_EQ(stream.Skip(2), 2);
+  stream.Skip(2);
   EXPECT_TRUE(stream.HasRemaining());
   EXPECT_EQ(stream.BytesConsumed(), 2);
-  EXPECT_EQ(stream.Skip(2), 2);
+  stream.Skip(2);
   EXPECT_TRUE(stream.HasRemaining());
   EXPECT_EQ(stream.BytesConsumed(), 4);
-  EXPECT_EQ(stream.Skip(2), 1);
+  EXPECT_THROW(stream.Skip(2), EndOfStreamException);
+  EXPECT_TRUE(stream.HasRemaining());
+  EXPECT_EQ(stream.BytesConsumed(), 4);
+  stream.Skip(1);
   EXPECT_FALSE(stream.HasRemaining());
   EXPECT_EQ(stream.BytesConsumed(), 5);
-  EXPECT_EQ(stream.Skip(2), 0);
 }
 
 }  // namespace wasmcc
