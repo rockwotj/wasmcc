@@ -13,16 +13,29 @@ uint8_t ByteStream::ReadByte() {
   }
   return _buffer[_position++];
 }
-size_t ByteStream::ReadBytes(bytes_view out) {
-  size_t amt = std::min(out.size(), _buffer.size() - _position);
-  std::copy_n(&_buffer[_position], amt, out.begin());
-  _position += amt;
-  return amt;
+uint8_t ByteStream::PeekByte() {
+  if (!HasRemaining()) [[unlikely]] {
+    throw EndOfStreamException();
+  }
+  return _buffer[_position];
 }
-size_t ByteStream::Skip(size_t n) {
-  size_t amt = std::min(n, _buffer.size() - _position);
-  _position += amt;
-  return amt;
+bytes ByteStream::ReadBytes(size_t n) {
+  auto remainder = _buffer.size() - _position;
+  if (remainder < n) [[unlikely]] {
+    throw EndOfStreamException();
+  }
+  auto start = _buffer.begin() + int32_t(_position);
+  auto end = start + int32_t(n);
+  bytes b(start, end);
+  _position += n;
+  return b;
+}
+void ByteStream::Skip(size_t n) {
+  auto remainder = _buffer.size() - _position;
+  if (remainder < n) [[unlikely]] {
+    throw EndOfStreamException();
+  }
+  _position += n;
 }
 bool ByteStream::HasRemaining() { return _position < _buffer.size(); }
 size_t ByteStream::BytesConsumed() { return _position; }

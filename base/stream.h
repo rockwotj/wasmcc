@@ -30,13 +30,25 @@ class Stream {
   virtual uint8_t ReadByte() = 0;
 
   /**
+   * Read a single byte from the stream without advancing the stream.
+   *
+   * Implementations should throw EndOfStreamException if there is no data
+   * left.
+   */
+  virtual uint8_t PeekByte() = 0;
+
+  /**
    * Write bytes into the bytes view, return the number of bytes written.
    *
-   * This may read 0 bytes if there is no data left in the stream.
+   * Implementations should throw EndOfStreamException if there is not
+   * enough data left to read.
    */
-  virtual size_t ReadBytes(bytes_view) = 0;
+  virtual bytes ReadBytes(size_t) = 0;
 
-  virtual size_t Skip(size_t) = 0;
+  /**
+   * A more efficent version of ReadBytes that doesn't allocate.
+   */
+  virtual void Skip(size_t) = 0;
 
   /** If there is data left on the stream. */
   virtual bool HasRemaining() = 0;
@@ -57,8 +69,9 @@ class ByteStream : public Stream {
   ~ByteStream() override = default;
 
   uint8_t ReadByte() override;
-  size_t ReadBytes(bytes_view) override;
-  size_t Skip(size_t) override;
+  uint8_t PeekByte() override;
+  bytes ReadBytes(size_t) override;
+  void Skip(size_t) override;
   bool HasRemaining() override;
   size_t BytesConsumed() override;
 

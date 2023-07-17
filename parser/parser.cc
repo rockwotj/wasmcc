@@ -70,11 +70,7 @@ Name ParseName(Stream* parser) {
   if (str_len > kMaxNameLength) {
     throw ParseException(absl::StrFormat("name too long: %d", str_len));
   }
-  bytes b(str_len, 0);
-  auto amt = parser->ReadBytes(b);
-  if (amt != str_len) {
-    throw EndOfStreamException();
-  }
+  auto b = parser->ReadBytes(str_len);
   // TODO: Validate UTF8
   std::string s(b.begin(), b.end());
   return Name(std::move(s));
@@ -372,21 +368,13 @@ Value parse_const_expr(Stream* parser) {
     case 0x42:
       return Value::U64(leb128::decode<uint64_t>(parser));
     case 0x43: {
-      bytes b(sizeof(float), 0);
-      size_t amt = parser->ReadBytes(b);
-      if (amt != b.size()) {
-        throw EndOfStreamException();
-      }
+      bytes b = parser->ReadBytes(sizeof(float));
       float result = 0;
       std::memcpy(&result, b.data(), b.size());
       return Value::F32(result);
     }
     case 0x44: {
-      bytes b(sizeof(double), 0);
-      size_t amt = parser->ReadBytes(b);
-      if (amt != b.size()) {
-        throw EndOfStreamException();
-      }
+      bytes b = parser->ReadBytes(sizeof(double));
       double result = 0;
       std::memcpy(&result, b.data(), b.size());
       return Value::F64(result);
@@ -617,23 +605,16 @@ co::Future<> ModuleBuilder::ParseOneSection(Stream* parser) {
 }
 
 co::Future<> ModuleBuilder::Parse(Stream* parser) {
-  bytes magic(4, 0);
-  size_t amt = parser->ReadBytes(magic);
-  if (amt != magic.size()) {
-    throw EndOfStreamException();
-  }
+  bytes magic = parser->ReadBytes(4);
   static const bytes kMagicBytes = bytes({0x00, 0x61, 0x73, 0x6D});
   if (magic != kMagicBytes) {
     throw ParseException(absl::StrFormat("magic bytes mismatch: %x %x %x %x",
                                          magic[0], magic[1], magic[2],
                                          magic[3]));
   }
-  amt = parser->ReadBytes(magic);
-  if (amt != magic.size()) {
-    throw EndOfStreamException();
-  }
+  bytes version = parser->ReadBytes(4);
   static const bytes kVersionOne = bytes({0x01, 0x00, 0x00, 0x00});
-  if (magic != kVersionOne) {
+  if (version != kVersionOne) {
     throw ParseException("unsupported wasm version");
   }
   while (parser->HasRemaining()) {
