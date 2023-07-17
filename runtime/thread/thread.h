@@ -9,15 +9,18 @@ namespace wasmcc::runtime {
 struct ThreadStack;
 using StackState = std::unique_ptr<ThreadStack, void (*)(ThreadStack*)>;
 
+// Default to 64kb stack size
+constexpr size_t kDefaultStackSize = 1024L * 64;
+
 struct VMThreadConfiguration {
   /** The size of the native runtime stack. */
-  size_t stack_size;
+  size_t stack_size = kDefaultStackSize;
   /**
    * If true enable 4k guard pages on each side of the stack,
    * and protect the memory, which means that if there is a stack
    * {over,under}flow that the process is aborted.
    */
-  bool enable_guard_pages;
+  bool enable_guard_pages = true;
 };
 
 /**
@@ -48,11 +51,11 @@ class VMThread {
   ~VMThread();
 
   /**
-   * Create a new thread running the specified function with a stack the size of
-   * `stack_size`.
+   * Create a new thread running the specified function with optional
+   * configuration overrides.
    */
   static std::unique_ptr<VMThread> Create(absl::AnyInvocable<void()>,
-                                          VMThreadConfiguration);
+                                          VMThreadConfiguration = {});
 
   /**
    * Resume (or start) the thread.

@@ -22,8 +22,8 @@ class Compiler {
   Compiler() = default;
   Compiler(const Compiler&) = delete;
   Compiler& operator=(const Compiler&) = delete;
-  Compiler(Compiler&&) = default;
-  Compiler& operator=(Compiler&&) = default;
+  Compiler(Compiler&&) noexcept = default;
+  Compiler& operator=(Compiler&&) noexcept = default;
   virtual ~Compiler() = default;
 
   /**
