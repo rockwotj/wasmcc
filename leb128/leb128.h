@@ -9,7 +9,7 @@
 namespace wasmcc::leb128 {
 
 template <typename int_type>
-bytes encode(int_type value) {
+bytes Encode(int_type value) {
   bytes output;
 
   static_assert(sizeof(int_type) == sizeof(uint32_t) ||
@@ -49,7 +49,7 @@ bytes encode(int_type value) {
 class DecodeException : std::exception {};
 
 template <typename int_type>
-int_type decode(Stream* stream) {
+int_type Decode(Stream* stream) {
   constexpr unsigned lower_seven_bits_mask = 0x7FU;
   constexpr unsigned continuation_bit_mask = 0x80U;
   static_assert(sizeof(int_type) == sizeof(uint32_t) ||

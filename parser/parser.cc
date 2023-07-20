@@ -66,7 +66,7 @@ void ValidateInRange(std::string_view msg, NamedInteger idx, const Vector& v) {
 }
 
 Name ParseName(Stream* parser) {
-  auto str_len = leb128::decode<uint32_t>(parser);
+  auto str_len = leb128::Decode<uint32_t>(parser);
   if (str_len > kMaxNameLength) {
     throw ParseException(absl::StrFormat("name too long: %d", str_len));
   }
@@ -77,25 +77,25 @@ Name ParseName(Stream* parser) {
 }
 
 TypeIdx ParseTypeIdx(Stream* parser) {
-  return TypeIdx(leb128::decode<uint32_t>(parser));
+  return TypeIdx(leb128::Decode<uint32_t>(parser));
 }
 
 FuncIdx ParseFuncIdx(Stream* parser) {
-  return FuncIdx(leb128::decode<uint32_t>(parser));
+  return FuncIdx(leb128::Decode<uint32_t>(parser));
 }
 TableIdx ParseTableIdx(Stream* parser) {
-  return TableIdx(leb128::decode<uint32_t>(parser));
+  return TableIdx(leb128::Decode<uint32_t>(parser));
 }
 MemIdx ParseMemIdx(Stream* parser) {
-  return MemIdx(leb128::decode<uint32_t>(parser));
+  return MemIdx(leb128::Decode<uint32_t>(parser));
 }
 GlobalIdx ParseGlobalIdx(Stream* parser) {
-  return GlobalIdx(leb128::decode<uint32_t>(parser));
+  return GlobalIdx(leb128::Decode<uint32_t>(parser));
 }
 
 template <size_t kMax>
 std::vector<ValType> ParseSignatureTypes(Stream* parser) {
-  auto vector_size = leb128::decode<uint32_t>(parser);
+  auto vector_size = leb128::Decode<uint32_t>(parser);
   if (vector_size > kMax) {
     throw ModuleTooLargeException(
         absl::StrFormat("too many parameters to function: %d", vector_size));
@@ -123,11 +123,11 @@ FunctionSignature ParseSignature(Stream* parser) {
 
 Limits ParseLimits(Stream* parser) {
   if (parser->ReadByte()) {
-    auto min = leb128::decode<uint32_t>(parser);
-    auto max = leb128::decode<uint32_t>(parser);
+    auto min = leb128::Decode<uint32_t>(parser);
+    auto max = leb128::Decode<uint32_t>(parser);
     return {.min = min, .max = max};
   } else {
-    auto min = leb128::decode<uint32_t>(parser);
+    auto min = leb128::Decode<uint32_t>(parser);
     return {.min = min, .max = std::numeric_limits<uint32_t>::max()};
   }
 }
@@ -257,7 +257,7 @@ co::Future<ParsedModule> ModuleBuilder::Build() {
 }
 
 co::Future<> ModuleBuilder::ParseSignatureSection(Stream* parser) {
-  auto vector_size = leb128::decode<uint32_t>(parser);
+  auto vector_size = leb128::Decode<uint32_t>(parser);
   if (vector_size > kMaxFunctionSignatures) {
     throw ModuleTooLargeException(
         absl::StrFormat("too large of type section: %d, max: %d", vector_size,
@@ -270,7 +270,7 @@ co::Future<> ModuleBuilder::ParseSignatureSection(Stream* parser) {
 }
 
 co::Future<> ModuleBuilder::ParseFunctionDeclarationSection(Stream* parser) {
-  auto vector_size = leb128::decode<uint32_t>(parser);
+  auto vector_size = leb128::Decode<uint32_t>(parser);
   if (vector_size > MAX_FUNCTIONS) {
     throw ModuleTooLargeException(absl::StrFormat(
         "too many functions: %d, max: %d", vector_size, MAX_FUNCTIONS));
@@ -317,7 +317,7 @@ ModuleImport ModuleBuilder::ParseOneImport(Stream* parser) {
 }
 
 co::Future<> ModuleBuilder::ParseImportSection(Stream* parser) {
-  auto vector_size = leb128::decode<uint32_t>(parser);
+  auto vector_size = leb128::Decode<uint32_t>(parser);
   if (vector_size > kMaxImports) {
     throw ModuleTooLargeException(absl::StrFormat(
         "too many imports: %d, max: %d", vector_size, kMaxImports));
@@ -332,7 +332,7 @@ co::Future<> ModuleBuilder::ParseImportSection(Stream* parser) {
 Table parse_table(Stream* parser) { return {.type = ParseTableType(parser)}; }
 
 co::Future<> ModuleBuilder::ParseTableSection(Stream* parser) {
-  auto vector_size = leb128::decode<uint32_t>(parser);
+  auto vector_size = leb128::Decode<uint32_t>(parser);
   if (vector_size > kMaxTables) {
     throw ModuleTooLargeException(absl::StrFormat(
         "too many tables: %d, max: %d", vector_size, kMaxTables));
@@ -347,7 +347,7 @@ co::Future<> ModuleBuilder::ParseTableSection(Stream* parser) {
 Mem parse_memory(Stream* parser) { return {.type = ParseMemType(parser)}; }
 
 co::Future<> ModuleBuilder::ParseMemoriesSection(Stream* parser) {
-  auto vector_size = leb128::decode<uint32_t>(parser);
+  auto vector_size = leb128::Decode<uint32_t>(parser);
   if (vector_size > kMaxMemories) {
     throw ModuleTooLargeException(absl::StrFormat(
         "too many memories: %d, max: %d", vector_size, kMaxMemories));
@@ -364,9 +364,9 @@ Value parse_const_expr(Stream* parser) {
   // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
   switch (opcode) {
     case 0x41:
-      return Value::U32(leb128::decode<uint32_t>(parser));
+      return Value::U32(leb128::Decode<uint32_t>(parser));
     case 0x42:
-      return Value::U64(leb128::decode<uint64_t>(parser));
+      return Value::U64(leb128::Decode<uint64_t>(parser));
     case 0x43: {
       bytes b = parser->ReadBytes(sizeof(float));
       float result = 0;
@@ -394,7 +394,7 @@ Global parse_global(Stream* parser) {
 }
 
 co::Future<> ModuleBuilder::ParseGlobalsSection(Stream* parser) {
-  auto vector_size = leb128::decode<uint32_t>(parser);
+  auto vector_size = leb128::Decode<uint32_t>(parser);
   if (vector_size > kMaxGlobals) {
     throw ModuleTooLargeException(absl::StrFormat(
         "too many globals: %d, max: %d", vector_size, kMaxGlobals));
@@ -442,7 +442,7 @@ ModuleExport ModuleBuilder::ParseOneExport(Stream* parser) {
 }
 
 co::Future<> ModuleBuilder::ParseExportsSection(Stream* parser) {
-  auto vector_size = leb128::decode<uint32_t>(parser);
+  auto vector_size = leb128::Decode<uint32_t>(parser);
   if (vector_size > kMaxExports) {
     throw ModuleTooLargeException(absl::StrFormat(
         "too many exports: %d, max: %d", vector_size, kMaxExports));
@@ -470,17 +470,17 @@ std::vector<Instruction> ParseExpression(Stream* parser,
         i = op::Return();
         break;
       case 0x20: {  // get_local_i32
-        auto idx = leb128::decode<uint32_t>(parser);
+        auto idx = leb128::Decode<uint32_t>(parser);
         i = op::GetLocalI32(idx);
         break;
       }
       case 0x21: {  // set_local_i32
-        auto idx = leb128::decode<uint32_t>(parser);
+        auto idx = leb128::Decode<uint32_t>(parser);
         i = op::SetLocalI32(idx);
         break;
       }
       case 0x41: {  // const_i32
-        auto v = leb128::decode<uint32_t>(parser);
+        auto v = leb128::Decode<uint32_t>(parser);
         i = op::ConstI32(Value::U32(v));
         break;
       }
@@ -499,12 +499,12 @@ std::vector<Instruction> ParseExpression(Stream* parser,
 }
 
 void ModuleBuilder::ParseOneCode(Stream* parser, Function* func) {
-  auto expected_size = leb128::decode<uint32_t>(parser);
+  auto expected_size = leb128::Decode<uint32_t>(parser);
   auto start_position = parser->BytesConsumed();
 
-  auto vector_size = leb128::decode<uint32_t>(parser);
+  auto vector_size = leb128::Decode<uint32_t>(parser);
   for (uint32_t i = 0; i < vector_size; ++i) {
-    auto num_locals = leb128::decode<uint32_t>(parser);
+    auto num_locals = leb128::Decode<uint32_t>(parser);
     if (num_locals + func->meta.locals.size() > MAX_FUNCTION_LOCALS) {
       throw ModuleTooLargeException(absl::StrFormat(
           "too many locals: %d", num_locals + func->meta.locals.size()));
@@ -526,7 +526,7 @@ void ModuleBuilder::ParseOneCode(Stream* parser, Function* func) {
 }
 
 co::Future<> ModuleBuilder::ParseCodeSection(Stream* parser) {
-  auto vector_size = leb128::decode<uint32_t>(parser);
+  auto vector_size = leb128::Decode<uint32_t>(parser);
   // We don't need to check the max size because we did that for _functions
   if (vector_size != _functions.size()) {
     throw ParseException(
@@ -553,7 +553,7 @@ co::Future<> ModuleBuilder::ParseOneSection(Stream* parser) {
     // ensure are read in order.
     _latest_section_read = id;
   }
-  auto size = leb128::decode<uint32_t>(parser);
+  auto size = leb128::Decode<uint32_t>(parser);
   // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
   switch (id) {
     case 0x00:  // Custom section

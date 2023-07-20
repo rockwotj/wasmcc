@@ -20,11 +20,11 @@ struct TestData {
 
 template <typename T>
 void RunTest(const TestData<T>& testcase) {
-  EXPECT_EQ(encode<T>(testcase.decoded), testcase.encoded)
+  EXPECT_EQ(Encode<T>(testcase.decoded), testcase.encoded)
       << "encoding: " << testcase.decoded;
 
   auto s = ByteStream(testcase.encoded);
-  EXPECT_EQ(decode<T>(&s), testcase.decoded)
+  EXPECT_EQ(Decode<T>(&s), testcase.decoded)
       << "decoding: " << testcase.decoded;
 }
 
@@ -112,16 +112,16 @@ INSTANTIATE_TEST_SUITE_P(
 TEST(Overflow, Long) {
   bytes encoded(size_t(11), 0xff);
   auto s = ByteStream(encoded);
-  EXPECT_THROW(decode<int64_t>(&s), DecodeException);
+  EXPECT_THROW(Decode<int64_t>(&s), DecodeException);
   s = ByteStream(encoded);
-  EXPECT_THROW(decode<uint64_t>(&s), DecodeException);
+  EXPECT_THROW(Decode<uint64_t>(&s), DecodeException);
 }
 TEST(Overflow, Int) {
   bytes encoded = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
   auto s = ByteStream(encoded);
-  EXPECT_THROW(decode<int32_t>(&s), DecodeException);
+  EXPECT_THROW(Decode<int32_t>(&s), DecodeException);
   s = ByteStream(encoded);
-  EXPECT_THROW(decode<uint32_t>(&s), DecodeException);
+  EXPECT_THROW(Decode<uint32_t>(&s), DecodeException);
 }
 
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
