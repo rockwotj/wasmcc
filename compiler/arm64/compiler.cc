@@ -69,7 +69,7 @@ void Compiler::Epilogue() {
   _asm.ret(a64::x30);
 }
 
-void Compiler::operator()(op::ConstI32 op) {
+void Compiler::operator()(const op::ConstI32& op) {
   auto* top = _stack->Push({.type = ValType::kI32});
   auto reg = EnsureInRegister(top);
   int32_t v = op.value.AsI32();
@@ -77,7 +77,7 @@ void Compiler::operator()(op::ConstI32 op) {
   // reg = i32
   _asm.mov(reg.w(), v);
 }
-void Compiler::operator()(op::AddI32) {
+void Compiler::operator()(const op::AddI32&) {
   auto x2 = _stack->Pop();
   auto x2_reg = EnsureInRegister(&x2);
   auto* x1 = _stack->Peek();
@@ -87,7 +87,7 @@ void Compiler::operator()(op::AddI32) {
   _asm.add(x1_reg.w(), x1_reg.w(), x2_reg.w());
   _reg_tracker->MarkRegisterUnused(x2_reg);
 }
-void Compiler::operator()(op::GetLocalI32 op) {
+void Compiler::operator()(const op::GetLocalI32& op) {
   _stack->Push({.type = ValType::kI32});
   auto* top = _stack->Peek();
   top->reg = AllocateRegister();
@@ -95,7 +95,7 @@ void Compiler::operator()(op::GetLocalI32 op) {
   auto comment = AnnotateNext("GetLocalI32(%d)", op.idx);
   _asm.ldr(top->reg->w(), a64::Mem(a64::sp, offset));
 }
-void Compiler::operator()(op::SetLocalI32 op) {
+void Compiler::operator()(const op::SetLocalI32& op) {
   auto v = _stack->Pop();
   auto v_reg = EnsureInRegister(&v);
   auto offset = _frame.LocalStackOffset(op.idx);
@@ -103,7 +103,16 @@ void Compiler::operator()(op::SetLocalI32 op) {
   _asm.ldr(v_reg, a64::Mem(a64::sp, offset));
   _reg_tracker->MarkRegisterUnused(v_reg);
 }
-void Compiler::operator()(op::Return) { _asm.b(_exit_label); }
+void Compiler::operator()(const op::Return&) { _asm.b(_exit_label); }
+void Compiler::operator()(const op::LabelBlockStart&) {
+  // TODO
+}
+void Compiler::operator()(const op::LabelBlockAlternative&) {
+  // TODO
+}
+void Compiler::operator()(const op::LabelBlockEnd&) {
+  // TODO
+}
 
 a64::Gp Compiler::AllocateRegister() {
   std::optional<a64::Gp> reg = _reg_tracker->TakeUnusedRegister();

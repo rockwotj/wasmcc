@@ -223,6 +223,9 @@ class ModuleBuilder {
   co::Future<> ParseExportsSection(Stream*);
 
   // Parse a function body
+  std::vector<Instruction> ParseExpression(Stream* parser,
+                                           FunctionValidator* validator);
+  BlockType ParseBlockType(Stream*);
   void ParseOneCode(Stream*, Function*);
   co::Future<> ParseCodeSection(Stream*);
 
@@ -243,6 +246,35 @@ class ModuleBuilder {
   std::vector<ModuleExport> _exports;
   std::optional<FuncIdx> _start;
 };
+
+BlockType ModuleBuilder::ParseBlockType(Stream* parser) {
+  auto byte = parser->PeekByte();
+  // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
+  if (byte == 0x40) {
+    parser->Skip(1);
+    return BlockType{};
+  }
+  switch (byte) {
+    case uint8_t(ValType::kI32):
+    case uint8_t(ValType::kI64):
+    case uint8_t(ValType::kF32):
+    case uint8_t(ValType::kF64):
+    case uint8_t(ValType::kFuncRef):
+    case uint8_t(ValType::kExternRef): {
+      ValType vt = ParseValType(parser);
+      return BlockType{.result_types = {vt}};
+    }
+    default:
+      break;
+  }
+  auto funcidx = ParseFuncIdx(parser);
+  ValidateInRange("unknown function signature", funcidx, _func_signatures);
+  const auto& sig = _func_signatures[funcidx.value()];
+  return BlockType{
+      .parameter_types = sig.parameter_types,
+      .result_types = sig.result_types,
+  };
+}
 
 co::Future<ParsedModule> ModuleBuilder::Build() {
   ParsedModule parsed;
@@ -458,14 +490,24 @@ co::Future<> ModuleBuilder::ParseExportsSection(Stream* parser) {
   }
 }
 
-std::vector<Instruction> ParseExpression(Stream* parser,
-                                         FunctionValidator* validator) {
+std::vector<Instruction> ModuleBuilder::ParseExpression(
+    Stream* parser, FunctionValidator* validator) {
   std::vector<Instruction> instruction_vector;
   // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
   for (auto opcode = parser->ReadByte(); opcode != 0x0B;
        opcode = parser->ReadByte()) {
     std::optional<Instruction> i;
     switch (opcode) {
+      case 0x04: {
+        i = op::LabelBlockStart(ParseBlockType(parser));
+        break;
+      }
+      case 0x05:
+        i = op::LabelBlockAlternative();
+        break;
+      case 0x0B:
+        i = op::LabelBlockEnd();
+        break;
       case 0x0F:  // return
         i = op::Return();
         break;
