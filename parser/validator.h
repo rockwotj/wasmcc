@@ -71,6 +71,9 @@ class FunctionValidator {
   void operator()(const op::GetLocalI32&);
   void operator()(const op::SetLocalI32&);
   void operator()(const op::Return&);
+  void operator()(const op::LabelBlockStart&);
+  void operator()(const op::LabelBlockAlternative&);
+  void operator()(const op::LabelBlockEnd&);
 
   void Finalize();
 

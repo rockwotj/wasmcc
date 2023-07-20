@@ -97,6 +97,15 @@ void FunctionValidator::operator()(const op::Return&) {
   // Mark the current block as unreachable.
   _unreachable = true;
 }
+void FunctionValidator::operator()(const op::LabelBlockStart&) {
+  // TODO: Handle
+}
+void FunctionValidator::operator()(const op::LabelBlockAlternative&) {
+  // TODO: Handle
+}
+void FunctionValidator::operator()(const op::LabelBlockEnd&) {
+  // TODO: Handle
+}
 
 void FunctionValidator::Finalize() {
   for (ValType vt : _returns) {

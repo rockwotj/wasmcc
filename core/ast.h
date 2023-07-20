@@ -7,8 +7,8 @@
 #include "absl/container/flat_hash_map.h"
 #include "base/bytes.h"
 #include "base/named_type.h"
-#include "instruction.h"
-#include "value.h"
+#include "core/instruction.h"
+#include "core/value.h"
 
 namespace wasmcc {
 
