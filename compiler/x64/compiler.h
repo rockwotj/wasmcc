@@ -43,11 +43,14 @@ class Compiler {
   void Prologue();
   void Epilogue();
 
-  void operator()(op::ConstI32);
-  void operator()(op::AddI32);
-  void operator()(op::GetLocalI32);
-  void operator()(op::SetLocalI32);
-  void operator()(op::Return);
+  void operator()(const op::ConstI32&);
+  void operator()(const op::AddI32&);
+  void operator()(const op::GetLocalI32&);
+  void operator()(const op::SetLocalI32&);
+  void operator()(const op::Return&);
+  void operator()(const op::LabelBlockStart&);
+  void operator()(const op::LabelBlockAlternative&);
+  void operator()(const op::LabelBlockEnd&);
 
  private:
   GpReg AllocateRegister();
