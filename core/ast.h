@@ -12,12 +12,11 @@
 
 namespace wasmcc {
 
-struct FunctionSignature {
+struct BlockType {
   std::vector<ValType> parameter_types;
   std::vector<ValType> result_types;
 
-  friend bool operator==(const FunctionSignature&,
-                         const FunctionSignature&) = default;
+  friend bool operator==(const BlockType&, const BlockType&) = default;
 };
 
 struct Limits {
@@ -75,7 +74,7 @@ struct ModuleExport {
 
 struct Function {
   struct Metadata {
-    FunctionSignature signature;
+    BlockType signature;
     std::vector<ValType> locals;
     uint32_t max_stack_size_bytes;
     uint32_t max_stack_elements;

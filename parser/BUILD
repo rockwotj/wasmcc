@@ -31,6 +31,7 @@ cc_library(
         "//leb128",
         "//third_party/absl/container:flat_hash_set",
         "//third_party/absl/strings:str_format",
+        "//third_party/absl/functional:any_invocable",
     ],
 )
 
