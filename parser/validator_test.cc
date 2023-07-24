@@ -47,7 +47,7 @@ std::vector<ValType> AsWasmTypes() {
 
 template <typename R, typename... A>
 void check_instructions(const std::initializer_list<Instruction>& ops) {
-  FunctionSignature ft{.parameter_types = AsWasmTypes<A...>()};
+  BlockType ft{.parameter_types = AsWasmTypes<A...>()};
   if constexpr (!std::is_void_v<R>) {
     auto vt = AsWasmType<R>();
     ft.result_types.push_back(vt);

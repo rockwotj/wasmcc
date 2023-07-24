@@ -1,22 +1,22 @@
 #include <array>
+#include <string>
 #include <variant>
 #include <vector>
 
+#include "base/named_type.h"
 #include "value.h"
 
 #pragma once
 
 namespace wasmcc {
 
-/**
- * Blocks have types and push/pop stuff from the stack.
- */
-struct BlockType {
-  std::vector<ValType> parameter_types;
-  std::vector<ValType> result_types;
+using LabelId = NamedType<std::string, struct LabelIdTag>;
 
-  friend bool operator==(const BlockType&, const BlockType&) = default;
-};
+// Make a label in the form of <str>_<id>
+//
+// Most labels have a "class" so to speak and then an numeric id to prevent
+// clashes, so this simplifies creating those.
+LabelId MakeLabelId(std::string_view, int32_t);
 
 namespace op {
 // Push the constant onto the top of the stack.
@@ -41,19 +41,23 @@ struct SetLocalI32 {
 struct Return {};
 
 // The start of a block
-struct LabelBlockStart {
-  explicit LabelBlockStart(BlockType bt) : block_type(std::move(bt)) {}
-  BlockType block_type;
+struct Label {
+  LabelId id;
 };
-// An alternative (i.e. else statement) branch
-struct LabelBlockAlternative {};
-// The end of a block that has a label
-struct LabelBlockEnd {};
+// Branch to a given label ID
+struct Br {
+  LabelId label_id;
+};
+// Branch to `then_label_id` if the top of the stack is non zero, otherwise
+// branch to `else_label_id`.
+struct BrIf {
+  LabelId then_label_id;
+  LabelId else_label_id;
+};
 }  // namespace op
 
 using Instruction =
     std::variant<op::ConstI32, op::AddI32, op::GetLocalI32, op::SetLocalI32,
-                 op::Return, op::LabelBlockStart, op::LabelBlockAlternative,
-                 op::LabelBlockEnd>;
+                 op::Return, op::Label, op::Br, op::BrIf>;
 
 }  // namespace wasmcc

@@ -61,7 +61,7 @@ std::ostream& operator<<(std::ostream& os, ValidationType vt) {
       __builtin_unreachable();
   }
 }
-FunctionValidator::FunctionValidator(FunctionSignature ft,
+FunctionValidator::FunctionValidator(BlockType ft,
                                      const std::vector<ValType>& locals)
     : _locals(std::move(ft.parameter_types)),
       _returns(std::move(ft.result_types)) {
@@ -97,13 +97,13 @@ void FunctionValidator::operator()(const op::Return&) {
   // Mark the current block as unreachable.
   _unreachable = true;
 }
-void FunctionValidator::operator()(const op::LabelBlockStart&) {
+void FunctionValidator::operator()(const op::Label&) {
   // TODO: Handle
 }
-void FunctionValidator::operator()(const op::LabelBlockAlternative&) {
+void FunctionValidator::operator()(const op::Br&) {
   // TODO: Handle
 }
-void FunctionValidator::operator()(const op::LabelBlockEnd&) {
+void FunctionValidator::operator()(const op::BrIf&) {
   // TODO: Handle
 }
 
