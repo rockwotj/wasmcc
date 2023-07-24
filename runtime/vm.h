@@ -50,7 +50,7 @@ class VM {
    * Dynamically lookup a function with the given signature.
    */
   virtual std::optional<CompiledFunction> LookupFunctionHandleDynamic(
-      const Name&, const FunctionSignature&) = 0;
+      const Name&, const BlockType&) = 0;
 
   /**
    * Run the specified compiled function within the VM's thread and stack.

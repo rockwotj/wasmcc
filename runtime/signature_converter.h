@@ -51,9 +51,9 @@ std::vector<ValType> ConvertNativeSignatureToWasm() {
  * container, but otherwise could be done).
  */
 template <typename Signature>
-FunctionSignature SignatureFromNative() {
+BlockType SignatureFromNative() {
   using Func = FunctionTraits<Signature>;
-  FunctionSignature sig;
+  BlockType sig;
   sig.parameter_types =
       ConvertNativeSignatureToWasm<typename Func::arg_types>();
   if constexpr (!std::is_void_v<typename Func::result_type>) {

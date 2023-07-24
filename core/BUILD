@@ -11,7 +11,12 @@ cc_library(
 cc_library(
     name = "instruction",
     hdrs = ["instruction.h"],
-    deps = [":value"],
+    srcs = ["instruction.cc"],
+    deps = [
+      ":value",
+      "//base:named_type",
+      "//third_party/absl/strings:str_format",
+    ],
 )
 
 cc_library(
