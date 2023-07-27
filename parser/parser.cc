@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "absl/container/flat_hash_set.h"
+#include "absl/functional/any_invocable.h"
 #include "absl/strings/str_format.h"
 #include "base/bytes.h"
 #include "base/coro.h"
@@ -108,7 +109,7 @@ std::vector<ValType> ParseSignatureTypes(Stream* parser) {
   return result_type;
 }
 
-FunctionSignature ParseSignature(Stream* parser) {
+BlockType ParseSignature(Stream* parser) {
   auto magic = parser->ReadByte();
   // NOLINTNEXTLINE(cppcoreguidelines-avoid-magic-numbers)
   if (magic != 0x60) {
@@ -237,7 +238,7 @@ class ModuleBuilder {
   // NOTE: Custom sections are allowed to be anywhere.
   size_t _latest_section_read = 0;
 
-  std::vector<FunctionSignature> _func_signatures;
+  std::vector<BlockType> _func_signatures;
   std::vector<ModuleImport> _imports;
   std::vector<Function> _functions;
   std::vector<Table> _tables;
@@ -490,54 +491,70 @@ co::Future<> ModuleBuilder::ParseExportsSection(Stream* parser) {
   }
 }
 
+class OpEmitter {
+ public:
+  explicit OpEmitter(FunctionValidator* v) : _validator(v) {}
+
+  void Emit(Instruction instruction) {
+    std::visit(*_validator, instruction);
+    _instructions.push_back(std::move(instruction));
+  }
+
+  std::vector<Instruction> Finalize() && {
+    _validator->Finalize();
+    return std::move(_instructions);
+  }
+
+ private:
+  FunctionValidator* _validator;
+  std::vector<Instruction> _instructions;
+};
+
 std::vector<Instruction> ModuleBuilder::ParseExpression(
     Stream* parser, FunctionValidator* validator) {
-  std::vector<Instruction> instruction_vector;
+  auto emitter = OpEmitter(validator);
   // NOLINTBEGIN(cppcoreguidelines-avoid-magic-numbers)
   for (auto opcode = parser->ReadByte(); opcode != 0x0B;
        opcode = parser->ReadByte()) {
-    std::optional<Instruction> i;
     switch (opcode) {
-      case 0x04: {
-        i = op::LabelBlockStart(ParseBlockType(parser));
+      case 0x04:  // if
+        emitter.Emit(op::BrIf(MakeLabelId("then", 0), MakeLabelId("else", 0)));
+        emitter.Emit(op::Label(MakeLabelId("then", 0)));
         break;
-      }
-      case 0x05:
-        i = op::LabelBlockAlternative();
+      case 0x05:  // else
+        emitter.Emit(op::Br(MakeLabelId("end", 0)));
+        emitter.Emit(op::Label(MakeLabelId("else", 0)));
         break;
-      case 0x0B:
-        i = op::LabelBlockEnd();
+      case 0x0B:  // end
+        emitter.Emit(op::Label(MakeLabelId("end", 0)));
         break;
       case 0x0F:  // return
-        i = op::Return();
+        emitter.Emit(op::Return());
         break;
       case 0x20: {  // get_local_i32
         auto idx = leb128::Decode<uint32_t>(parser);
-        i = op::GetLocalI32(idx);
+        emitter.Emit(op::GetLocalI32(idx));
         break;
       }
       case 0x21: {  // set_local_i32
         auto idx = leb128::Decode<uint32_t>(parser);
-        i = op::SetLocalI32(idx);
+        emitter.Emit(op::SetLocalI32(idx));
         break;
       }
       case 0x41: {  // const_i32
         auto v = leb128::Decode<uint32_t>(parser);
-        i = op::ConstI32(Value::U32(v));
+        emitter.Emit(op::ConstI32(Value::U32(v)));
         break;
       }
       case 0x6A:  // add_i32
-        i = op::AddI32();
+        emitter.Emit(op::AddI32());
         break;
       default:
         throw ParseException(absl::StrFormat("unsupported opcode: %d", opcode));
     }
-    // Validate the instruction is good.
-    std::visit(*validator, i.value());
-    instruction_vector.push_back(i.value());
   }
   // NOLINTEND(cppcoreguidelines-avoid-magic-numbers)
-  return instruction_vector;
+  return std::move(emitter).Finalize();
 }
 
 void ModuleBuilder::ParseOneCode(Stream* parser, Function* func) {

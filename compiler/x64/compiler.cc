@@ -103,13 +103,13 @@ void Compiler::operator()(const op::SetLocalI32& op) {
   _reg_tracker->MarkRegisterUnused(v_reg);
 }
 void Compiler::operator()(const op::Return&) { _asm.jmp(_exit_label); }
-void Compiler::operator()(const op::LabelBlockStart&) {
+void Compiler::operator()(const op::Label&) {
   // TODO
 }
-void Compiler::operator()(const op::LabelBlockAlternative&) {
+void Compiler::operator()(const op::Br&) {
   // TODO
 }
-void Compiler::operator()(const op::LabelBlockEnd&) {
+void Compiler::operator()(const op::BrIf&) {
   // TODO
 }
 

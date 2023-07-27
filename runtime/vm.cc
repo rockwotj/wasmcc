@@ -20,7 +20,7 @@ class VMImpl final : public VM {
         _thread(runtime::VMThread::Create([this] { RunInternal(); }, {})) {}
 
   std::optional<CompiledFunction> LookupFunctionHandleDynamic(
-      const Name& name, const FunctionSignature& signature) final {
+      const Name& name, const BlockType& signature) final {
     auto it = _compiled.exported_functions.find(name);
     if (it == _compiled.exported_functions.end()) {
       return std::nullopt;
